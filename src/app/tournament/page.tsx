@@ -1,0 +1,439 @@
+'use client';
+
+import React, { useState } from 'react';
+import { useApp } from '@/context/AppContext';
+import { GroupStanding } from '@/types';
+import { 
+  Trophy, 
+  Shuffle, 
+  Calendar, 
+  Edit3, 
+  RotateCcw, 
+  Lock, 
+  CheckCircle2, 
+  Award,
+  Swords
+} from 'lucide-react';
+
+export default function TournamentPage() {
+  const { 
+    isAdmin, 
+    teams, 
+    fixtures, 
+    performGroupDraw, 
+    updateFixtureScore, 
+    standingsOverrides, 
+    updateStandingOverride, 
+    resetStandingOverrides 
+  } = useApp();
+
+  const [isEditingStandings, setIsEditingStandings] = useState(false);
+
+  // Group A and B teams
+  const groupATeams = teams.filter(t => t.group === 'A');
+  const groupBTeams = teams.filter(t => t.group === 'B');
+
+  // Helper to calculate automated standings for a group
+  const calculateStandings = (group: 'A' | 'B'): GroupStanding[] => {
+    const groupTeams = teams.filter(t => t.group === group);
+    const groupFixtures = fixtures.filter(f => f.group === group && f.isCompleted);
+
+    const standingsMap: Record<string, GroupStanding> = {};
+
+    groupTeams.forEach(t => {
+      standingsMap[t.id] = {
+        teamId: t.id,
+        teamName: t.name,
+        shortName: t.shortName,
+        group,
+        played: 0,
+        won: 0,
+        drawn: 0,
+        lost: 0,
+        goalsFor: 0,
+        goalsAgainst: 0,
+        goalDifference: 0,
+        points: 0
+      };
+    });
+
+    groupFixtures.forEach(f => {
+      const t1 = standingsMap[f.team1Id];
+      const t2 = standingsMap[f.team2Id];
+      const g1 = f.team1Score || 0;
+      const g2 = f.team2Score || 0;
+
+      if (t1 && t2) {
+        t1.played += 1;
+        t2.played += 1;
+        t1.goalsFor += g1;
+        t1.goalsAgainst += g2;
+        t2.goalsFor += g2;
+        t2.goalsAgainst += g1;
+
+        if (g1 > g2) {
+          t1.won += 1;
+          t1.points += 3;
+          t2.lost += 1;
+        } else if (g2 > g1) {
+          t2.won += 1;
+          t2.points += 3;
+          t1.lost += 1;
+        } else {
+          t1.drawn += 1;
+          t1.points += 1;
+          t2.drawn += 1;
+          t2.points += 1;
+        }
+
+        t1.goalDifference = t1.goalsFor - t1.goalsAgainst;
+        t2.goalDifference = t2.goalsFor - t2.goalsAgainst;
+      }
+    });
+
+    // Apply any manual overrides
+    const result = Object.values(standingsMap).map(s => {
+      const override = standingsOverrides[s.teamId];
+      if (override) {
+        return { ...s, ...override, manualOverride: true };
+      }
+      return s;
+    });
+
+    // Sort by Points, then Goal Difference, then Goals For
+    return result.sort((a, b) => {
+      if (b.points !== a.points) return b.points - a.points;
+      if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+      return b.goalsFor - a.goalsFor;
+    });
+  };
+
+  const standingsA = calculateStandings('A');
+  const standingsB = calculateStandings('B');
+
+  // Determine Knockout Semi-final pairings
+  const winnerA = standingsA[0];
+  const runnerUpA = standingsA[1];
+  const winnerB = standingsB[0];
+  const runnerUpB = standingsB[1];
+
+  const sf1Fixture = fixtures.find(f => f.id === 'f-sf1');
+  const sf2Fixture = fixtures.find(f => f.id === 'f-sf2');
+  const finalFixture = fixtures.find(f => f.id === 'f-final');
+
+  return (
+    <div className="visual-rally rally-tournament max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+      
+      {/* Top Banner */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-800 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-gradient-to-r from-primary-yellow to-vibrant-orange rounded-xl text-charcoal shadow-glow-yellow">
+            <Trophy className="w-8 h-8" />
+          </div>
+          <div>
+            <h1 className="font-bebas text-5xl text-white tracking-wide">TOURNAMENT & GROUP STAGE</h1>
+            <p className="text-xs text-light-cyan font-montserrat">Automated group draws, round-robin fixtures, score logging, and standings</p>
+          </div>
+        </div>
+
+        {isAdmin ? (
+          <div className="flex items-center gap-3">
+            <button
+              onClick={performGroupDraw}
+              className="px-6 py-3 bg-gradient-to-r from-primary-yellow via-vibrant-orange to-fiery-red text-charcoal font-bebas text-xl font-bold tracking-wider rounded-xl shadow-glow-yellow hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            >
+              <Shuffle size={20} />
+              <span>{fixtures.length > 0 ? 'Reshuffle Groups & Draw' : 'Perform Random Group Draw'}</span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 text-xs text-gray-400 bg-charcoal/80 px-4 py-2 rounded-xl border border-gray-700">
+            <Lock size={16} className="text-primary-yellow" />
+            <span>Admin login required for group draw & scores</span>
+          </div>
+        )}
+      </div>
+
+      {fixtures.length === 0 ? (
+        <div className="glass-panel-gold p-12 rounded-3xl text-center space-y-4 max-w-2xl mx-auto my-12">
+          <Shuffle className="w-16 h-16 text-primary-yellow mx-auto animate-bounce" />
+          <h2 className="font-bebas text-4xl text-white">GROUP DRAW NOT STARTED YET</h2>
+          <p className="text-gray-300 text-sm">
+            Click the <strong className="text-primary-yellow">"Perform Random Group Draw"</strong> button above to split the 6 teams into Group A & Group B and generate official fixtures.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-12">
+          
+          {/* Automated Group Standings */}
+          <section className="space-y-6">
+            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+              <h2 className="font-bebas text-4xl text-white tracking-wide flex items-center gap-2">
+                <Award className="text-primary-yellow" /> GROUP STANDINGS
+              </h2>
+
+              {isAdmin && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsEditingStandings(!isEditingStandings)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-montserrat font-semibold flex items-center gap-1.5 transition-colors ${
+                      isEditingStandings
+                        ? 'bg-fiery-red text-white'
+                        : 'bg-deep-blue text-light-cyan border border-light-cyan/30 hover:border-light-cyan'
+                    }`}
+                  >
+                    <Edit3 size={14} />
+                    <span>{isEditingStandings ? 'Done Editing' : '✏️ Edit Table Data'}</span>
+                  </button>
+
+                  {Object.keys(standingsOverrides).length > 0 && (
+                    <button
+                      onClick={resetStandingOverrides}
+                      className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-xs font-montserrat flex items-center gap-1"
+                      title="Reset manual overrides"
+                    >
+                      <RotateCcw size={14} />
+                      <span>Reset Table</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              {/* Group A Table */}
+              <div className="glass-panel p-6 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                  <h3 className="font-bebas text-2xl text-primary-yellow">GROUP A STANDINGS</h3>
+                  <span className="text-xs text-gray-400">Top 2 advance to Semifinals</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs font-montserrat">
+                    <thead>
+                      <tr className="border-b border-gray-800 text-gray-400 uppercase text-[10px]">
+                        <th className="py-2 font-semibold">Team</th>
+                        <th className="py-2 text-center">P</th>
+                        <th className="py-2 text-center">W</th>
+                        <th className="py-2 text-center">D</th>
+                        <th className="py-2 text-center">L</th>
+                        <th className="py-2 text-center">GD</th>
+                        <th className="py-2 text-center font-bold text-primary-yellow">PTS</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {standingsA.map((s, idx) => (
+                        <tr key={s.teamId} className={`hover:bg-deep-blue/40 ${idx < 2 ? 'bg-primary-yellow/5 font-semibold' : ''}`}>
+                          <td className="py-3 flex items-center gap-2">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bebas font-bold ${idx < 2 ? 'bg-primary-yellow text-charcoal' : 'bg-gray-800 text-gray-400'}`}>
+                              {idx + 1}
+                            </span>
+                            <span className="text-white text-sm font-semibold">{s.teamName}</span>
+                            {s.manualOverride && <span className="text-[9px] bg-fiery-red/20 text-fiery-red px-1 rounded">Edited</span>}
+                          </td>
+
+                          {isEditingStandings ? (
+                            <>
+                              <td className="p-1"><input type="number" value={s.played} onChange={e => updateStandingOverride(s.teamId, { played: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.won} onChange={e => updateStandingOverride(s.teamId, { won: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.drawn} onChange={e => updateStandingOverride(s.teamId, { drawn: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.lost} onChange={e => updateStandingOverride(s.teamId, { lost: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.goalDifference} onChange={e => updateStandingOverride(s.teamId, { goalDifference: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.points} onChange={e => updateStandingOverride(s.teamId, { points: Number(e.target.value) })} className="w-12 bg-charcoal border border-primary-yellow text-center text-primary-yellow font-bold" /></td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="py-3 text-center text-gray-300">{s.played}</td>
+                              <td className="py-3 text-center text-gray-300">{s.won}</td>
+                              <td className="py-3 text-center text-gray-300">{s.drawn}</td>
+                              <td className="py-3 text-center text-gray-300">{s.lost}</td>
+                              <td className="py-3 text-center text-light-cyan font-mono">{s.goalDifference > 0 ? `+${s.goalDifference}` : s.goalDifference}</td>
+                              <td className="py-3 text-center font-bebas text-xl text-primary-yellow">{s.points}</td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Group B Table */}
+              <div className="glass-panel p-6 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+                  <h3 className="font-bebas text-2xl text-light-cyan">GROUP B STANDINGS</h3>
+                  <span className="text-xs text-gray-400">Top 2 advance to Semifinals</span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs font-montserrat">
+                    <thead>
+                      <tr className="border-b border-gray-800 text-gray-400 uppercase text-[10px]">
+                        <th className="py-2 font-semibold">Team</th>
+                        <th className="py-2 text-center">P</th>
+                        <th className="py-2 text-center">W</th>
+                        <th className="py-2 text-center">D</th>
+                        <th className="py-2 text-center">L</th>
+                        <th className="py-2 text-center">GD</th>
+                        <th className="py-2 text-center font-bold text-primary-yellow">PTS</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {standingsB.map((s, idx) => (
+                        <tr key={s.teamId} className={`hover:bg-deep-blue/40 ${idx < 2 ? 'bg-light-cyan/5 font-semibold' : ''}`}>
+                          <td className="py-3 flex items-center gap-2">
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bebas font-bold ${idx < 2 ? 'bg-light-cyan text-charcoal' : 'bg-gray-800 text-gray-400'}`}>
+                              {idx + 1}
+                            </span>
+                            <span className="text-white text-sm font-semibold">{s.teamName}</span>
+                            {s.manualOverride && <span className="text-[9px] bg-fiery-red/20 text-fiery-red px-1 rounded">Edited</span>}
+                          </td>
+
+                          {isEditingStandings ? (
+                            <>
+                              <td className="p-1"><input type="number" value={s.played} onChange={e => updateStandingOverride(s.teamId, { played: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.won} onChange={e => updateStandingOverride(s.teamId, { won: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.drawn} onChange={e => updateStandingOverride(s.teamId, { drawn: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.lost} onChange={e => updateStandingOverride(s.teamId, { lost: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.goalDifference} onChange={e => updateStandingOverride(s.teamId, { goalDifference: Number(e.target.value) })} className="w-10 bg-charcoal border text-center text-white" /></td>
+                              <td className="p-1"><input type="number" value={s.points} onChange={e => updateStandingOverride(s.teamId, { points: Number(e.target.value) })} className="w-12 bg-charcoal border border-primary-yellow text-center text-primary-yellow font-bold" /></td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="py-3 text-center text-gray-300">{s.played}</td>
+                              <td className="py-3 text-center text-gray-300">{s.won}</td>
+                              <td className="py-3 text-center text-gray-300">{s.drawn}</td>
+                              <td className="py-3 text-center text-gray-300">{s.lost}</td>
+                              <td className="py-3 text-center text-light-cyan font-mono">{s.goalDifference > 0 ? `+${s.goalDifference}` : s.goalDifference}</td>
+                              <td className="py-3 text-center font-bebas text-xl text-primary-yellow">{s.points}</td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+          {/* Group Stage Fixtures & Admin Score Logger */}
+          <section className="space-y-6">
+            <div className="border-b border-gray-800 pb-3">
+              <h2 className="font-bebas text-4xl text-white tracking-wide flex items-center gap-2">
+                <Calendar className="text-vibrant-orange" /> ROUND-ROBIN FIXTURES
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {fixtures.filter(f => f.group === 'A' || f.group === 'B').map((f) => (
+                <div key={f.id} className="glass-panel p-6 rounded-2xl space-y-4">
+                  <div className="flex items-center justify-between text-xs border-b border-gray-800 pb-2">
+                    <span className="font-bebas text-base text-primary-yellow">MATCH #{f.matchNo}</span>
+                    <span className="text-gray-400">{f.stageName}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between py-2">
+                    <div className="w-5/12 text-center space-y-1">
+                      <p className="font-bebas text-xl text-white leading-tight">{f.team1Name}</p>
+                    </div>
+
+                    <div className="w-2/12 text-center">
+                      <span className="font-bebas text-2xl text-vibrant-orange">VS</span>
+                    </div>
+
+                    <div className="w-5/12 text-center space-y-1">
+                      <p className="font-bebas text-xl text-white leading-tight">{f.team2Name}</p>
+                    </div>
+                  </div>
+
+                  {/* Score Logger */}
+                  {isAdmin ? (
+                    <div className="bg-charcoal/80 p-3 rounded-xl border border-gray-700 flex items-center justify-center gap-3">
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={f.team1Score ?? ''}
+                        onChange={(e) => updateFixtureScore(f.id, Number(e.target.value), f.team2Score)}
+                        className="w-12 h-10 bg-deep-blue border border-gray-600 rounded text-center text-white font-bebas text-2xl focus:border-primary-yellow focus:outline-none"
+                      />
+                      <span className="font-bebas text-xl text-gray-400">-</span>
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={f.team2Score ?? ''}
+                        onChange={(e) => updateFixtureScore(f.id, f.team1Score, Number(e.target.value))}
+                        className="w-12 h-10 bg-deep-blue border border-gray-600 rounded text-center text-white font-bebas text-2xl focus:border-primary-yellow focus:outline-none"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-center bg-charcoal/60 p-2.5 rounded-xl border border-gray-800">
+                      {f.isCompleted ? (
+                        <p className="font-bebas text-3xl text-primary-yellow">
+                          {f.team1Score} - {f.team2Score}
+                        </p>
+                      ) : (
+                        <span className="text-xs text-gray-500 italic">Fixture Scheduled</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Knockouts Section */}
+          <section className="space-y-6">
+            <div className="border-b border-gray-800 pb-3">
+              <h2 className="font-bebas text-4xl text-white tracking-wide flex items-center gap-2">
+                <Swords className="text-fiery-red" /> KNOCKOUT STAGE (SEMIFINALS & FINAL)
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              
+              {/* SF1 */}
+              <div className="glass-panel p-6 rounded-2xl space-y-4 border-l-4 border-l-vibrant-orange">
+                <h4 className="font-bebas text-2xl text-vibrant-orange">SEMIFINAL 1</h4>
+                <div className="text-sm space-y-2">
+                  <p className="text-white font-semibold">{winnerA?.teamName || 'Winner Group A'}</p>
+                  <p className="text-xs text-gray-400">vs</p>
+                  <p className="text-white font-semibold">{runnerUpB?.teamName || 'Runner-up Group B'}</p>
+                </div>
+              </div>
+
+              {/* SF2 */}
+              <div className="glass-panel p-6 rounded-2xl space-y-4 border-l-4 border-l-vibrant-orange">
+                <h4 className="font-bebas text-2xl text-vibrant-orange">SEMIFINAL 2</h4>
+                <div className="text-sm space-y-2">
+                  <p className="text-white font-semibold">{winnerB?.teamName || 'Winner Group B'}</p>
+                  <p className="text-xs text-gray-400">vs</p>
+                  <p className="text-white font-semibold">{runnerUpA?.teamName || 'Runner-up Group A'}</p>
+                </div>
+              </div>
+
+              {/* GRAND FINAL */}
+              <div className="glass-panel-gold p-6 rounded-2xl space-y-4 border-l-4 border-l-primary-yellow">
+                <h4 className="font-bebas text-2xl text-primary-yellow flex items-center gap-2">
+                  <Trophy size={20} /> GRAND FINAL
+                </h4>
+                <div className="text-sm space-y-2">
+                  <p className="text-white font-bold">Winner Semifinal 1</p>
+                  <p className="text-xs text-primary-yellow font-bebas text-lg">VS</p>
+                  <p className="text-white font-bold">Winner Semifinal 2</p>
+                </div>
+              </div>
+
+            </div>
+          </section>
+
+        </div>
+      )}
+
+    </div>
+  );
+}
