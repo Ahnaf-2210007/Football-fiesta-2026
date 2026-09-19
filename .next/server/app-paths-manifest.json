@@ -1,0 +1,8 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/players/page": "app/players/page.js",
+  "/tournament/page": "app/tournament/page.js",
+  "/teams/page": "app/teams/page.js",
+  "/stats/page": "app/stats/page.js",
+  "/auction/page": "app/auction/page.js"
+}
