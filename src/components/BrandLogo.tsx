@@ -6,12 +6,14 @@ interface BrandLogoProps {
   variant?: 'full' | 'horizontal' | 'compact';
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showTagline?: boolean;
+  logoSrc?: string;
 }
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
   variant = 'full',
   size = 'md',
   showTagline = true,
+  logoSrc = '/logo.png',
 }) => {
   const getSizeClass = () => {
     switch (size) {
@@ -38,7 +40,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   return (
     <div className="flex items-center justify-center">
       <img
-        src="/logo.png"
+        src={logoSrc}
         alt="ECE Football Fiesta official logo"
         className={`object-contain drop-shadow-[0_18px_30px_rgba(0,0,0,0.45)] transition-transform duration-300 hover:scale-[1.02] ${imageClass}`}
       />

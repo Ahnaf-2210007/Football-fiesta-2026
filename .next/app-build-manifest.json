@@ -16,6 +16,16 @@
       "static/chunks/main-app.js",
       "static/chunks/app/icons/page.js"
     ],
+    "/auction/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/auction/page.js"
+    ],
+    "/tournament/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/tournament/page.js"
+    ],
     "/players/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -26,20 +36,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/teams/page.js"
     ],
-    "/tournament/page": [
+    "/rules/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/tournament/page.js"
+      "static/chunks/app/rules/page.js"
     ],
     "/stats/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/stats/page.js"
-    ],
-    "/auction/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/auction/page.js"
     ],
     "/_not-found/page": [
       "static/chunks/webpack.js",

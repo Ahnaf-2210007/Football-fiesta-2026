@@ -114,6 +114,85 @@ export default function RulesPage() {
         )}
       </div>
 
+      {/* Add New Rule Form */}
+      {isAddModalOpen && (
+        <div className="glass-panel-gold rounded-3xl p-8 text-white space-y-6">
+          <div className="flex items-center justify-between border-b border-primary-yellow/30 pb-4">
+            <div className="flex items-center gap-3">
+              <FileText className="w-8 h-8 text-primary-yellow" />
+              <div>
+                <h3 className="font-bebas text-3xl text-primary-yellow">Add Custom Rule</h3>
+                <p className="text-xs text-gray-300">Add a new tournament regulation to the public rulebook</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsAddModalOpen(false)}
+              className="text-gray-400 hover:text-white"
+              title="Close add rule form"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          <form onSubmit={handleAddSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Rule Title</label>
+              <input
+                type="text"
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="e.g. Yellow Card Penalty Fine"
+                className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Category</label>
+              <select
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value as any)}
+                className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary-yellow focus:outline-none"
+              >
+                <option value="BUDGET">BUDGET</option>
+                <option value="SQUAD">SQUAD</option>
+                <option value="BIDDING">BIDDING</option>
+                <option value="MATCH">MATCH</option>
+                <option value="GENERAL">GENERAL</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Rule Description</label>
+              <textarea
+                rows={4}
+                value={newDesc}
+                onChange={(e) => setNewDesc(e.target.value)}
+                placeholder="Provide full description of the regulation..."
+                className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
+                required
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setIsAddModalOpen(false)}
+                className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bebas text-lg rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex-1 py-2.5 bg-primary-yellow text-charcoal font-bebas text-xl font-bold rounded-xl shadow-glow-yellow"
+              >
+                Add Rule
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Rules List */}
       <div className="space-y-6">
         {rules.map((rule, idx) => {
@@ -217,85 +296,6 @@ export default function RulesPage() {
           );
         })}
       </div>
-
-      {/* Add New Rule Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-lg glass-panel-gold rounded-3xl p-8 text-white space-y-6">
-            <button
-              onClick={() => setIsAddModalOpen(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-
-            <div className="flex items-center gap-3 border-b border-primary-yellow/30 pb-4">
-              <FileText className="w-8 h-8 text-primary-yellow" />
-              <div>
-                <h3 className="font-bebas text-3xl text-primary-yellow">Add Custom Rule</h3>
-                <p className="text-xs text-gray-300">Add a new tournament regulation to the public rulebook</p>
-              </div>
-            </div>
-
-            <form onSubmit={handleAddSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Rule Title</label>
-                <input
-                  type="text"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="e.g. Yellow Card Penalty Fine"
-                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Category</label>
-                <select
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value as any)}
-                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary-yellow focus:outline-none"
-                >
-                  <option value="BUDGET">BUDGET</option>
-                  <option value="SQUAD">SQUAD</option>
-                  <option value="BIDDING">BIDDING</option>
-                  <option value="MATCH">MATCH</option>
-                  <option value="GENERAL">GENERAL</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Rule Description</label>
-                <textarea
-                  rows={4}
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="Provide full description of the regulation..."
-                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
-                  required
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bebas text-lg rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 bg-primary-yellow text-charcoal font-bebas text-xl font-bold rounded-xl shadow-glow-yellow"
-                >
-                  Add Rule
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
     </div>
   );

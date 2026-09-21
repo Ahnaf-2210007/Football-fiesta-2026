@@ -46,7 +46,7 @@ export const Header: React.FC = () => {
 
             {/* Logo & Brand Title */}
             <Link href="/" className="flex items-center gap-3 group shrink-0">
-              <BrandLogo variant="horizontal" size="sm" showTagline={true} />
+              <BrandLogo variant="horizontal" size="sm" showTagline={true} logoSrc="/H_logo.png" />
             </Link>
 
             {/* Desktop Navigation */}
