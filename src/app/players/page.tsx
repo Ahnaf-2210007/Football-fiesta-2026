@@ -48,6 +48,10 @@ export default function PlayersDirectoryPage() {
   const [newRoll, setNewRoll] = useState('');
   const [newSeries, setNewSeries] = useState('21 Series');
   const [newPosition, setNewPosition] = useState<PlayerPosition>('FORWARD');
+  const [newPhotoUrl, setNewPhotoUrl] = useState('');
+
+  // Edit player modal state
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
 
   // Bulk import state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -78,11 +82,13 @@ export default function PlayersDirectoryPage() {
       roll: newRoll,
       series: newSeries,
       position: newPosition,
-      isIcon: false
+      isIcon: false,
+      photoUrl: normalizeImageUrl(newPhotoUrl)
     });
 
     setNewName('');
     setNewRoll('');
+    setNewPhotoUrl('');
     setIsAddModalOpen(false);
   };
 
@@ -235,13 +241,22 @@ export default function PlayersDirectoryPage() {
               <PlayerCard player={player} />
               
               {isAdmin && (
-                <button
-                  onClick={() => deletePlayer(player.id)}
-                  className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-2 bg-fiery-red text-white rounded-lg transition-opacity hover:scale-110 shadow-md z-20"
-                  title="Delete Player"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity z-20">
+                  <button
+                    onClick={() => setEditingPlayer(player)}
+                    className="p-2 bg-primary-yellow text-charcoal rounded-lg hover:scale-110 shadow-md font-bold text-xs"
+                    title="Edit Player Info"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deletePlayer(player.id)}
+                    className="p-2 bg-fiery-red text-white rounded-lg hover:scale-110 shadow-md"
+                    title="Delete Player"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               )}
             </div>
           ))}
@@ -250,8 +265,8 @@ export default function PlayersDirectoryPage() {
 
       {/* Add Single Player Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 text-white space-y-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-16 overflow-y-auto bg-black/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 text-white space-y-4 shadow-2xl animate-fadeIn border-2 border-primary-yellow/40">
             <button
               onClick={() => setIsAddModalOpen(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white"
@@ -317,6 +332,20 @@ export default function PlayersDirectoryPage() {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">
+                  Player Photo / Image Link (Google Drive / Web URL)
+                </label>
+                <input
+                  type="text"
+                  value={newPhotoUrl}
+                  onChange={(e) => setNewPhotoUrl(e.target.value)}
+                  placeholder="Paste image link or Google Drive link..."
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary-yellow focus:outline-none"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">Google Drive images are automatically parsed.</p>
+              </div>
+
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
@@ -337,10 +366,119 @@ export default function PlayersDirectoryPage() {
         </div>
       )}
 
+      {/* Edit Existing Player Modal */}
+      {editingPlayer && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-16 overflow-y-auto bg-black/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-md glass-panel rounded-2xl p-6 text-white space-y-4 shadow-2xl border-2 border-teal/50">
+            <button
+              onClick={() => setEditingPlayer(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+
+            <h3 className="font-bebas text-3xl text-teal">Edit Player Details</h3>
+
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (!editingPlayer) return;
+              const { updatePlayer } = useApp();
+              useApp().updatePlayer({
+                ...editingPlayer,
+                photoUrl: normalizeImageUrl(editingPlayer.photoUrl)
+              });
+              setEditingPlayer(null);
+            }} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Full Name</label>
+                <input
+                  type="text"
+                  value={editingPlayer.name}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, name: e.target.value })}
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-teal focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Roll No.</label>
+                  <input
+                    type="text"
+                    value={editingPlayer.roll}
+                    onChange={(e) => setEditingPlayer({ ...editingPlayer, roll: e.target.value })}
+                    className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-teal focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Series</label>
+                  <select
+                    value={editingPlayer.series}
+                    onChange={(e) => setEditingPlayer({ ...editingPlayer, series: e.target.value })}
+                    className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-teal focus:outline-none"
+                  >
+                    <option value="19 Series">19 Series</option>
+                    <option value="20 Series">20 Series</option>
+                    <option value="21 Series">21 Series</option>
+                    <option value="22 Series">22 Series</option>
+                    <option value="23 Series">23 Series</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Position</label>
+                <select
+                  value={editingPlayer.position}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, position: e.target.value as PlayerPosition })}
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-teal focus:outline-none"
+                >
+                  <option value="FORWARD">FORWARD</option>
+                  <option value="MIDFIELDER">MIDFIELDER</option>
+                  <option value="DEFENDER">DEFENDER</option>
+                  <option value="GOALKEEPER">GOALKEEPER</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">
+                  Photo / Image URL (Google Drive Link)
+                </label>
+                <input
+                  type="text"
+                  value={editingPlayer.photoUrl || ''}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, photoUrl: e.target.value })}
+                  placeholder="Paste image link..."
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-teal focus:outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingPlayer(null)}
+                  className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bebas text-lg rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-teal text-charcoal font-bebas text-xl font-bold rounded-xl shadow-glow-cyan"
+                >
+                  Update Player
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Bulk Excel/CSV Import Modal */}
       {isImportModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-          <div className="relative w-full max-w-lg glass-panel-gold rounded-3xl p-8 text-white space-y-6">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-16 overflow-y-auto bg-black/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-lg glass-panel-gold rounded-3xl p-8 text-white space-y-6 shadow-2xl border-2 border-primary-yellow/50">
             <button
               onClick={() => setIsImportModalOpen(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-white"

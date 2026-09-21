@@ -32,9 +32,9 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
 
   const imageClass =
     variant === 'compact'
-      ? 'w-14 h-auto'
+      ? 'w-12 h-auto max-h-9'
       : variant === 'horizontal'
-        ? 'w-40 sm:w-48 h-auto'
+        ? 'w-32 sm:w-36 h-auto max-h-11'
         : getSizeClass();
 
   return (

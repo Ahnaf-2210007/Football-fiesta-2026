@@ -24,6 +24,7 @@ export interface Team {
   name: string;
   shortName: string;
   owner: string;
+  ownerPhotoUrl?: string;
   logoUrl?: string;
   color: string;
   startingPurse: number;

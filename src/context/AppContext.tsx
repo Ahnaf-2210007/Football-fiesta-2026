@@ -14,6 +14,8 @@ interface AppContextType {
   rules: TournamentRule[];
   fixtures: MatchFixture[];
   standingsOverrides: Record<string, Partial<GroupStanding>>;
+  customAwards: Record<string, { recipientName?: string; recipientTeam?: string; detail?: string }>;
+  updateAward: (awardId: string, awardData: { recipientName?: string; recipientTeam?: string; detail?: string }) => void;
 
   // Auction specific
   currentStagePlayer: Player | null;
@@ -59,6 +61,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [standingsOverrides, setStandingsOverrides] = useState<Record<string, Partial<GroupStanding>>>({});
   const [currentStagePlayer, setCurrentStagePlayer] = useState<Player | null>(null);
 
+  const [customAwards, setCustomAwards] = useState<Record<string, { recipientName?: string; recipientTeam?: string; detail?: string }>>({});
+
   // Load from local storage on mount
   useEffect(() => {
     try {
@@ -76,6 +80,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (parsed.fixtures) setFixtures(parsed.fixtures);
         if (parsed.standingsOverrides) setStandingsOverrides(parsed.standingsOverrides);
         if (parsed.currentStagePlayer) setCurrentStagePlayer(parsed.currentStagePlayer);
+        if (parsed.customAwards) setCustomAwards(parsed.customAwards);
       }
     } catch (e) {
       console.error('Failed to load state from LocalStorage', e);
@@ -91,13 +96,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         rules,
         fixtures,
         standingsOverrides,
-        currentStagePlayer
+        currentStagePlayer,
+        customAwards
       };
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(stateToSave));
     } catch (e) {
       console.error('Failed to save state to LocalStorage', e);
     }
-  }, [teams, players, rules, fixtures, standingsOverrides, currentStagePlayer]);
+  }, [teams, players, rules, fixtures, standingsOverrides, currentStagePlayer, customAwards]);
 
   const loginAdmin = async (password: string): Promise<boolean> => {
     try {
@@ -115,7 +121,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     } catch (err) {
       // Fallback client check if API fails or offline
-      if (password === 'ECE2026' || password === 'admin') {
+      if (password === 'ECE22') {
         setIsAdmin(true);
         localStorage.setItem('ECE_ADMIN_ACTIVE', 'true');
         return true;
@@ -369,12 +375,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setRules(INITIAL_RULES);
   };
 
+  const updateAward = (awardId: string, awardData: { recipientName?: string; recipientTeam?: string; detail?: string }) => {
+    setCustomAwards(prev => ({
+      ...prev,
+      [awardId]: { ...(prev[awardId] || {}), ...awardData }
+    }));
+  };
+
   const resetAllData = () => {
     setTeams(INITIAL_TEAMS);
     setPlayers([...INITIAL_ICON_PLAYERS, ...INITIAL_POOL_PLAYERS]);
     setRules(INITIAL_RULES);
     setFixtures([]);
     setStandingsOverrides({});
+    setCustomAwards({});
     setCurrentStagePlayer(null);
     localStorage.removeItem(LOCAL_STORAGE_KEY);
   };
@@ -390,6 +404,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         rules,
         fixtures,
         standingsOverrides,
+        customAwards,
+        updateAward,
         currentStagePlayer,
         drawNextRandomPlayer,
         markPlayerSold,

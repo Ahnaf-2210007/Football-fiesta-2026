@@ -84,14 +84,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter admin password (Default: ECE2026)"
+                  placeholder="Enter admin password..."
                   className="w-full bg-charcoal/90 border border-light-cyan/30 rounded-xl px-4 py-3 pl-11 text-white placeholder-gray-500 focus:outline-none focus:border-primary-yellow focus:ring-1 focus:ring-primary-yellow"
                   required
                   autoFocus
                 />
                 <KeyRound className="absolute left-3.5 top-3.5 text-light-cyan w-5 h-5" />
               </div>
-              <p className="text-[11px] text-gray-400 mt-1.5 italic">Tip: Default master password is <code className="text-primary-yellow bg-charcoal/80 px-1.5 py-0.5 rounded border border-primary-yellow/30">ECE2026</code></p>
             </div>
 
             {error && (

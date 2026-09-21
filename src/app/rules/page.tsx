@@ -114,90 +114,88 @@ export default function RulesPage() {
         )}
       </div>
 
-      {/* Add New Rule Form */}
+      {/* Add New Rule Modal */}
       {isAddModalOpen && (
-        <div className="glass-panel-gold rounded-3xl p-8 text-white space-y-6">
-          <div className="flex items-center justify-between border-b border-primary-yellow/30 pb-4">
-            <div className="flex items-center gap-3">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-16 overflow-y-auto bg-black/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-lg glass-panel-gold rounded-3xl p-8 text-white space-y-6 shadow-2xl border-2 border-primary-yellow/50">
+            <button
+              onClick={() => setIsAddModalOpen(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-primary-yellow/30 pb-4">
               <FileText className="w-8 h-8 text-primary-yellow" />
               <div>
                 <h3 className="font-bebas text-3xl text-primary-yellow">Add Custom Rule</h3>
                 <p className="text-xs text-gray-300">Add a new tournament regulation to the public rulebook</p>
               </div>
             </div>
-            <button
-              onClick={() => setIsAddModalOpen(false)}
-              className="text-gray-400 hover:text-white"
-              title="Close add rule form"
-            >
-              <X size={20} />
-            </button>
+
+            <form onSubmit={handleAddSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Rule Title</label>
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="e.g. Yellow Card Penalty Fine"
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Category</label>
+                <select
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value as any)}
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary-yellow focus:outline-none"
+                >
+                  <option value="BUDGET">BUDGET</option>
+                  <option value="SQUAD">SQUAD</option>
+                  <option value="BIDDING">BIDDING</option>
+                  <option value="MATCH">MATCH</option>
+                  <option value="GENERAL">GENERAL</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Rule Description</label>
+                <textarea
+                  rows={4}
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  placeholder="Provide full description of the regulation..."
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bebas text-lg rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-primary-yellow text-charcoal font-bebas text-xl font-bold rounded-xl shadow-glow-yellow"
+                >
+                  Add Rule
+                </button>
+              </div>
+            </form>
           </div>
-
-          <form onSubmit={handleAddSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Rule Title</label>
-              <input
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="e.g. Yellow Card Penalty Fine"
-                className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Category</label>
-              <select
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value as any)}
-                className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary-yellow focus:outline-none"
-              >
-                <option value="BUDGET">BUDGET</option>
-                <option value="SQUAD">SQUAD</option>
-                <option value="BIDDING">BIDDING</option>
-                <option value="MATCH">MATCH</option>
-                <option value="GENERAL">GENERAL</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Rule Description</label>
-              <textarea
-                rows={4}
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                placeholder="Provide full description of the regulation..."
-                className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
-                required
-              />
-            </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsAddModalOpen(false)}
-                className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bebas text-lg rounded-xl"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-1 py-2.5 bg-primary-yellow text-charcoal font-bebas text-xl font-bold rounded-xl shadow-glow-yellow"
-              >
-                Add Rule
-              </button>
-            </div>
-          </form>
         </div>
       )}
 
       {/* Rules List */}
       <div className="space-y-6">
         {rules.map((rule, idx) => {
-          const isEditing = editingRuleId === rule.id;
-
           return (
             <div
               key={rule.id}
@@ -218,7 +216,7 @@ export default function RulesPage() {
                   </div>
                 </div>
 
-                {isAdmin && !isEditing && (
+                {isAdmin && (
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => startEdit(rule)}
@@ -238,64 +236,82 @@ export default function RulesPage() {
                 )}
               </div>
 
-              {isEditing ? (
-                <div className="p-4 bg-charcoal/95 border border-primary-yellow/40 rounded-xl space-y-3">
-                  <div>
-                    <label className="text-[11px] text-gray-400 block mb-1">Rule Title</label>
-                    <input
-                      type="text"
-                      value={editTitle}
-                      onChange={e => setEditTitle(e.target.value)}
-                      className="w-full bg-deep-blue border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-primary-yellow focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-gray-400 block mb-1">Rule Category</label>
-                    <select
-                      value={editCategory}
-                      onChange={e => setEditCategory(e.target.value as any)}
-                      className="w-full bg-deep-blue border border-gray-700 rounded px-3 py-2 text-xs text-white focus:border-primary-yellow focus:outline-none"
-                    >
-                      <option value="BUDGET">BUDGET</option>
-                      <option value="SQUAD">SQUAD</option>
-                      <option value="BIDDING">BIDDING</option>
-                      <option value="MATCH">MATCH</option>
-                      <option value="GENERAL">GENERAL</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[11px] text-gray-400 block mb-1">Rule Description</label>
-                    <textarea
-                      rows={3}
-                      value={editDesc}
-                      onChange={e => setEditDesc(e.target.value)}
-                      className="w-full bg-deep-blue border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-primary-yellow focus:outline-none"
-                    />
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      onClick={() => setEditingRuleId(null)}
-                      className="px-3 py-1.5 bg-gray-800 text-xs text-gray-300 rounded hover:bg-gray-700"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={() => handleEditSave(rule.id)}
-                      className="px-4 py-1.5 bg-primary-yellow text-charcoal font-bebas text-base font-bold rounded hover:opacity-90"
-                    >
-                      Save Rule Changes
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-gray-300 text-sm leading-relaxed font-montserrat pl-13">
-                  {rule.description}
-                </p>
-              )}
+              <p className="text-gray-300 text-sm leading-relaxed font-montserrat pl-13">
+                {rule.description}
+              </p>
             </div>
           );
         })}
       </div>
+
+      {/* Edit Rule Top-Front Modal Popup */}
+      {editingRuleId && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-16 overflow-y-auto bg-black/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-lg glass-panel-gold rounded-3xl p-6 text-white space-y-4 shadow-2xl border-2 border-primary-yellow/50">
+            <button
+              onClick={() => setEditingRuleId(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <X size={20} />
+            </button>
+
+            <h3 className="font-bebas text-3xl text-primary-yellow">Edit Regulation Rule</h3>
+
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-gray-300 font-semibold block mb-1">Rule Title</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={e => setEditTitle(e.target.value)}
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-300 font-semibold block mb-1">Rule Category</label>
+                <select
+                  value={editCategory}
+                  onChange={e => setEditCategory(e.target.value as any)}
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary-yellow focus:outline-none"
+                >
+                  <option value="BUDGET">BUDGET</option>
+                  <option value="SQUAD">SQUAD</option>
+                  <option value="BIDDING">BIDDING</option>
+                  <option value="MATCH">MATCH</option>
+                  <option value="GENERAL">GENERAL</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-gray-300 font-semibold block mb-1">Rule Description</label>
+                <textarea
+                  rows={4}
+                  value={editDesc}
+                  onChange={e => setEditDesc(e.target.value)}
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white focus:border-primary-yellow focus:outline-none"
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setEditingRuleId(null)}
+                  className="flex-1 py-2.5 bg-gray-800 text-gray-300 font-bebas text-lg rounded-xl"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleEditSave(editingRuleId);
+                  }}
+                  className="flex-1 py-2.5 bg-primary-yellow text-charcoal font-bebas text-xl font-bold rounded-xl shadow-glow-yellow"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -3,9 +3,9 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     const { password } = await request.json();
-    const adminPassword = process.env.ADMIN_MASTER_PASSWORD || 'ECE2026';
+    const adminPassword = process.env.ADMIN_MASTER_PASSWORD || 'ECE22';
 
-    if (password === adminPassword || password === 'ECE2026' || password === 'admin') {
+    if (password === adminPassword || password === 'ECE22') {
       return NextResponse.json({ success: true, message: 'Admin authenticated' });
     }
 

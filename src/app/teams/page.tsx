@@ -27,9 +27,9 @@ export default function TeamsPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="bg-deep-blue border border-primary-yellow/30 px-4 py-2 rounded-xl text-right">
-            <span className="text-[10px] text-gray-400 uppercase block font-semibold">Total Purse Spent</span>
-            <span className="font-bebas text-2xl text-primary-yellow">{totalBudgetSpent} / {totalMaxPurse} TK</span>
+          <div className="bg-deep-blue border border-teal/30 px-4 py-2 rounded-xl text-right">
+            <span className="text-[10px] text-gray-400 uppercase block font-semibold">Total Registered Squads</span>
+            <span className="font-bebas text-2xl text-teal">{teams.length} Teams</span>
           </div>
 
           {!isAdmin && (

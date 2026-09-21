@@ -6,6 +6,7 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'Circuit Breakers',
     shortName: 'CBR',
     owner: 'Prof. Dr. Alamgir Hossain',
+    ownerPhotoUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&q=80',
     logoUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=300&q=80',
     color: '#FFD600', // Yellow
     startingPurse: 1500,
@@ -18,6 +19,7 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'Cyber Titans',
     shortName: 'CYT',
     owner: 'Dr. Shahinur Islam',
+    ownerPhotoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&q=80',
     logoUrl: 'https://images.unsplash.com/photo-1543351611-c82399575a20?w=300&q=80',
     color: '#00B3A4', // Teal
     startingPurse: 1500,
@@ -30,6 +32,7 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'Signal Kings',
     shortName: 'SGK',
     owner: 'Engr. Mahmudul Hasan',
+    ownerPhotoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&q=80',
     logoUrl: 'https://images.unsplash.com/photo-1579952363873-27f3bade9f55?w=300&q=80',
     color: '#FF6B00', // Vibrant Orange
     startingPurse: 1500,
@@ -42,6 +45,7 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'Silicon Spartans',
     shortName: 'SSP',
     owner: 'Dr. Tariqul Islam',
+    ownerPhotoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&q=80',
     logoUrl: 'https://images.unsplash.com/photo-1518091043644-c1d4457512c6?w=300&q=80',
     color: '#4EE4FF', // Light Cyan
     startingPurse: 1500,
@@ -54,6 +58,7 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'Voltage Warriors',
     shortName: 'VWR',
     owner: 'Engr. Sajjad Hossain',
+    ownerPhotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=80',
     logoUrl: 'https://images.unsplash.com/photo-1489944440615-453fc2b6a9a9?w=300&q=80',
     color: '#E63946', // Fiery Red
     startingPurse: 1500,
@@ -66,6 +71,7 @@ export const INITIAL_TEAMS: Team[] = [
     name: 'Byte Force FC',
     shortName: 'BFF',
     owner: 'Engr. Nazmul Huda',
+    ownerPhotoUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=300&q=80',
     logoUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=300&q=80',
     color: '#0B2D3A', // Deep Blue
     startingPurse: 1500,

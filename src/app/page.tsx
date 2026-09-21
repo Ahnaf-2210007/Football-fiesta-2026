@@ -42,14 +42,6 @@ export default function HomePage() {
         
         <div className="relative z-10 max-w-5xl mx-auto text-center space-y-6">
           
-          {/* Pulsing Status Badge */}
-          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-deep-blue/90 border-2 border-primary-yellow shadow-glow-yellow pulse-live">
-            <span className="w-3 h-3 rounded-full bg-primary-yellow animate-ping" />
-            <span className="font-bebas text-xl tracking-wider text-primary-yellow">
-              {isMatchesStarted ? '🟢 MATCHES ONGOING' : isAuctionCompleted ? '🔵 TOURNAMENT READY' : '🟡 LIVE AUCTION STAGE READY'}
-            </span>
-          </div>
-
           {/* Full Primary Brand Logo Showcase */}
           <div className="flex justify-center py-2">
             <div className="w-72 sm:w-96 md:w-[460px] drop-shadow-2xl hover:scale-105 transition-transform duration-300">
@@ -154,7 +146,7 @@ export default function HomePage() {
               <Shield className="text-light-cyan w-6 h-6" />
               <h2 className="font-bebas text-4xl text-white tracking-wide">PARTICIPATING TEAMS</h2>
             </div>
-            <p className="text-xs text-gray-400">Current purse remaining, squad counts, and roster status</p>
+            <p className="text-xs text-gray-400">Squad counts, managers, and official team rosters</p>
           </div>
 
           <Link
@@ -169,8 +161,6 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map((team) => {
             const teamSquadCount = players.filter(p => p.teamId === team.id).length;
-            const spent = players.filter(p => p.teamId === team.id).reduce((sum, p) => sum + (p.soldPrice || 0), 0);
-            const remaining = team.startingPurse - spent;
 
             return (
               <div key={team.id} className="glass-panel p-6 rounded-2xl space-y-4 hover:border-primary-yellow/50 transition-all">
@@ -190,15 +180,9 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 bg-charcoal/80 p-3 rounded-xl text-center text-xs">
-                  <div>
-                    <span className="text-gray-400 block text-[10px] uppercase font-semibold">Purse Left</span>
-                    <span className="font-bebas text-xl text-primary-yellow">{remaining} TK</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-400 block text-[10px] uppercase font-semibold">Squad Count</span>
-                    <span className="font-bebas text-xl text-light-cyan">{teamSquadCount}/10</span>
-                  </div>
+                <div className="bg-charcoal/80 p-3 rounded-xl flex items-center justify-between text-xs">
+                  <span className="text-gray-400 uppercase font-semibold text-[10px]">Squad Roster Count</span>
+                  <span className="font-bebas text-xl text-light-cyan">{teamSquadCount}/10 Players</span>
                 </div>
               </div>
             );
