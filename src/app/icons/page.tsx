@@ -304,30 +304,64 @@ export default function IconPlayersPage() {
           <span className="text-xs text-gray-400">{goalkeepers.length} of 6 added</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {goalkeepers.map(goalkeeper => (
-            <div key={goalkeeper.id} className="glass-panel rounded-3xl p-6 space-y-4 border border-teal/30">
-              <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-2xl bg-charcoal border-2 border-teal overflow-hidden shrink-0 flex items-center justify-center">
-                {goalkeeper.photoUrl ? <img src={goalkeeper.photoUrl} alt={goalkeeper.name} className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-gray-400" />}
-              </div>
-              <div className="min-w-0">
-                <h3 className="font-bebas text-2xl text-white truncate">{goalkeeper.name}</h3>
-                <p className="text-xs text-gray-400">Roll: <span className="text-teal font-mono">{goalkeeper.roll}</span> · {goalkeeper.series}</p>
-                {goalkeeper.rating !== undefined && <p className="text-xs text-primary-yellow mt-1">Rating: {goalkeeper.rating}</p>}
-              </div>
-              </div>
-              {isAdmin && (
-                <div className="flex gap-2">
-                  <select value={inlineTeam[goalkeeper.id] || goalkeeper.teamId || ''} onChange={e => setInlineTeam({ ...inlineTeam, [goalkeeper.id]: e.target.value })} className="min-w-0 flex-1 bg-deep-blue border border-gray-700 rounded-lg px-2 py-2 text-xs text-white">
-                    <option value="">Choose Team</option>
-                    {teams.map(t => <option key={t.id} value={t.id}>{t.name || `Team Slot ${t.id.replace('team-', '')}`}</option>)}
-                  </select>
-                  {goalkeeper.teamId ? <button onClick={() => assignGoalkeeper(goalkeeper.id, inlineTeam[goalkeeper.id] || goalkeeper.teamId!, inlinePrice[goalkeeper.id] || goalkeeper.soldPrice || 0)} className="px-3 py-2 bg-primary-yellow text-charcoal font-bebas rounded-lg">Change</button> : <button onClick={() => handleGoalkeeperAssign(goalkeeper.id)} className="px-3 py-2 bg-teal text-charcoal font-bebas rounded-lg">Assign</button>}
-                  {goalkeeper.teamId && <button onClick={() => markPlayerUnsold(goalkeeper.id)} className="px-3 py-2 bg-fiery-red text-white font-bebas rounded-lg">Return</button>}
+          {goalkeepers.map(goalkeeper => {
+            const assignedTeam = teams.find(team => team.id === goalkeeper.teamId);
+
+            return (
+              <div key={goalkeeper.id} className="glass-panel-gold rounded-3xl p-6 space-y-6 relative overflow-hidden border border-teal/40">
+                <div className="flex items-center justify-between">
+                  <span className="bg-gradient-to-r from-teal to-light-cyan text-charcoal font-bebas text-xs px-3 py-1 rounded-md font-bold flex items-center gap-1">
+                    <Shield size={14} /> GOALKEEPER
+                  </span>
+                  {goalkeeper.teamId && <span className="bg-teal/20 text-teal border border-teal/40 font-bebas text-xs px-2.5 py-1 rounded-md">ASSIGNED</span>}
                 </div>
-              )}
-            </div>
-          ))}
+
+                <div className="flex items-center gap-4">
+                  <div className="w-24 h-24 rounded-2xl bg-charcoal border-2 border-teal overflow-hidden shrink-0 flex items-center justify-center shadow-md">
+                    {goalkeeper.photoUrl ? <img src={goalkeeper.photoUrl} alt={goalkeeper.name} className="w-full h-full object-cover" /> : <User className="w-14 h-14 text-gray-400" />}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bebas text-3xl text-white truncate">{goalkeeper.name}</h3>
+                    <p className="text-xs text-gray-400">Roll: <span className="text-teal font-mono">{goalkeeper.roll}</span> · {goalkeeper.series}</p>
+                    {goalkeeper.rating !== undefined && <p className="text-xs text-primary-yellow mt-1">Rating: {goalkeeper.rating}</p>}
+                  </div>
+                </div>
+
+                {goalkeeper.teamId ? (
+                  <div className="bg-charcoal/80 p-4 rounded-2xl border border-teal/30 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400">Assigned Team:</span>
+                      <span className="font-bebas text-xl text-teal">{assignedTeam?.name || 'Team'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs border-t border-gray-800 pt-2">
+                      <span className="text-gray-400">Price Deduction:</span>
+                      <span className="font-bebas text-xl text-vibrant-orange">{goalkeeper.soldPrice || 0} TK</span>
+                    </div>
+                    {isAdmin && <div className="flex gap-2 pt-2">
+                      <select value={inlineTeam[goalkeeper.id] || goalkeeper.teamId} onChange={e => setInlineTeam({ ...inlineTeam, [goalkeeper.id]: e.target.value })} className="min-w-0 flex-1 bg-deep-blue border border-gray-700 rounded-lg px-2 py-2 text-xs text-white">
+                        {teams.map(t => <option key={t.id} value={t.id}>{t.name || `Team Slot ${t.id.replace('team-', '')}`}</option>)}
+                      </select>
+                      <input type="number" min="0" value={inlinePrice[goalkeeper.id] ?? goalkeeper.soldPrice ?? 0} onChange={e => setInlinePrice({ ...inlinePrice, [goalkeeper.id]: Number(e.target.value) })} className="w-20 bg-deep-blue border border-gray-700 rounded-lg px-2 py-2 text-xs text-primary-yellow" />
+                      <button onClick={() => assignGoalkeeper(goalkeeper.id, inlineTeam[goalkeeper.id] || goalkeeper.teamId!, inlinePrice[goalkeeper.id] ?? goalkeeper.soldPrice ?? 0)} className="px-3 py-2 bg-primary-yellow text-charcoal font-bebas rounded-lg">Change</button>
+                      <button onClick={() => markPlayerUnsold(goalkeeper.id)} className="px-3 py-2 bg-fiery-red text-white font-bebas rounded-lg">Return</button>
+                    </div>}
+                  </div>
+                ) : isAdmin ? (
+                  <div className="bg-charcoal/90 p-4 rounded-2xl border border-gray-700 space-y-3">
+                    <h4 className="font-bebas text-xl text-teal flex items-center gap-1.5"><Wallet size={18} /> Goalkeeper Assignment</h4>
+                    <div className="flex gap-2">
+                      <select value={inlineTeam[goalkeeper.id] || ''} onChange={e => setInlineTeam({ ...inlineTeam, [goalkeeper.id]: e.target.value })} className="min-w-0 flex-1 bg-deep-blue border border-gray-700 rounded-lg px-2 py-2 text-xs text-white">
+                        <option value="">Choose Team</option>
+                        {teams.map(t => <option key={t.id} value={t.id}>{t.name || `Team Slot ${t.id.replace('team-', '')}`}</option>)}
+                      </select>
+                      <input type="number" min="0" value={inlinePrice[goalkeeper.id] ?? 0} onChange={e => setInlinePrice({ ...inlinePrice, [goalkeeper.id]: Number(e.target.value) })} className="w-24 bg-deep-blue border border-gray-700 rounded-lg px-2 py-2 text-xs text-primary-yellow" placeholder="Price" />
+                    </div>
+                    <button onClick={() => handleGoalkeeperAssign(goalkeeper.id)} className="w-full py-2.5 bg-gradient-to-r from-teal to-light-cyan text-charcoal font-bebas text-lg font-bold rounded-xl">Fix Goalkeeper & Deduct Price</button>
+                  </div>
+                ) : <div className="p-4 rounded-2xl border border-dashed border-gray-700 text-center text-xs text-gray-500 italic">Awaiting Admin Assignment</div>}
+              </div>
+            );
+          })}
         </div>
       </section>
 

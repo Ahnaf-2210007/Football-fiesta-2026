@@ -276,16 +276,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const unassignIconPlayer = (playerId: string) => {
+    const currentPlayer = players.find(p => p.id === playerId);
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, status: 'ICON', soldPrice: undefined, teamId: undefined, teamName: undefined } : p));
-    setTeams(prev => prev.map(t => t.iconPlayerId === playerId ? { ...t, iconPlayerId: undefined } : t));
+    setTeams(prev => prev.map(t => {
+      if (t.iconPlayerId === playerId) return { ...t, iconPlayerId: undefined, spentPurse: Math.max(0, t.spentPurse - (currentPlayer?.soldPrice || 0)) };
+      return t;
+    }));
     persistMutation('unassignIconPlayer', { playerId });
   };
 
   const assignGoalkeeper = (playerId: string, teamId: string, price: number) => {
     const targetTeam = teams.find(t => t.id === teamId);
+    const currentPlayer = players.find(p => p.id === playerId);
     if (!targetTeam) return;
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, status: 'SOLD', soldPrice: price, teamId, teamName: targetTeam.name } : p));
-    setTeams(prev => prev.map(t => t.id === teamId ? { ...t, spentPurse: t.spentPurse + price } : t));
+    setTeams(prev => prev.map(t => {
+      if (t.id === currentPlayer?.teamId && t.id !== teamId) return { ...t, spentPurse: Math.max(0, t.spentPurse - (currentPlayer.soldPrice || 0)) };
+      if (t.id === teamId) return { ...t, spentPurse: t.spentPurse - (currentPlayer?.teamId === teamId ? (currentPlayer.soldPrice || 0) : 0) + price };
+      return t;
+    }));
     persistMutation('assignGoalkeeper', { playerId, teamId, price });
   };
 
@@ -356,12 +365,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const markPlayerUnsold = (playerId: string) => {
+    const currentPlayer = players.find(p => p.id === playerId);
     setPlayers(prev => prev.map(p => {
       if (p.id === playerId) {
         return { ...p, status: 'UNSOLD', teamId: undefined, teamName: undefined, soldPrice: undefined };
       }
       return p;
     }));
+    if (currentPlayer?.teamId) {
+      setTeams(prev => prev.map(team => team.id === currentPlayer.teamId ? {
+        ...team,
+        spentPurse: Math.max(0, team.spentPurse - (currentPlayer.soldPrice || 0))
+      } : team));
+    }
     persistMutation('markPlayerUnsold', { playerId });
 
     // Auto advance to next player
