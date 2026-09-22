@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { INITIAL_ICON_PLAYERS, INITIAL_POOL_PLAYERS, INITIAL_RULES, INITIAL_TEAMS } from '@/data/initialData';
+import { INITIAL_RULES, INITIAL_TEAMS } from '@/data/initialData';
 import { query } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -42,9 +42,10 @@ export async function GET() {
     console.error('Database state load failed:', error);
     return NextResponse.json({
       teams: INITIAL_TEAMS,
-      players: [...INITIAL_ICON_PLAYERS, ...INITIAL_POOL_PLAYERS],
+      players: [],
       rules: INITIAL_RULES,
-      source: 'seed-fallback'
+      fixtures: [],
+      source: 'database-unavailable'
     });
   }
 }

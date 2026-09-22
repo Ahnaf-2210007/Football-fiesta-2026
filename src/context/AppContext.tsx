@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Team, Player, MatchFixture, GroupStanding, TournamentRule } from '../types';
-import { INITIAL_TEAMS, INITIAL_ICON_PLAYERS, INITIAL_POOL_PLAYERS, INITIAL_RULES } from '../data/initialData';
+import { INITIAL_TEAMS, INITIAL_RULES } from '../data/initialData';
 
 interface AppContextType {
   isAdmin: boolean;
@@ -55,7 +55,7 @@ const LOCAL_STORAGE_KEY = 'ECE_FOOTBALL_FIESTA_V1';
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [teams, setTeams] = useState<Team[]>(INITIAL_TEAMS);
-  const [players, setPlayers] = useState<Player[]>([...INITIAL_ICON_PLAYERS, ...INITIAL_POOL_PLAYERS]);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [rules, setRules] = useState<TournamentRule[]>(INITIAL_RULES);
   const [fixtures, setFixtures] = useState<MatchFixture[]>([]);
   const [standingsOverrides, setStandingsOverrides] = useState<Record<string, Partial<GroupStanding>>>({});
@@ -76,7 +76,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (storedData) {
           const parsed = JSON.parse(storedData);
           if (parsed.teams) setTeams(parsed.teams);
-          if (parsed.players) setPlayers(parsed.players);
+          // Player data is server-owned. Do not restore the old dummy/local copy.
           if (parsed.rules) setRules(parsed.rules);
           if (parsed.fixtures) setFixtures(parsed.fixtures);
           if (parsed.standingsOverrides) setStandingsOverrides(parsed.standingsOverrides);
@@ -87,10 +87,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const response = await fetch('/api/state', { cache: 'no-store' });
         if (response.ok) {
           const databaseState = await response.json();
-          if (databaseState.teams?.length) setTeams(databaseState.teams);
-          if (databaseState.players?.length) setPlayers(databaseState.players);
-          if (databaseState.rules?.length) setRules(databaseState.rules);
-          if (databaseState.fixtures) setFixtures(databaseState.fixtures);
+          if (Array.isArray(databaseState.teams)) setTeams(databaseState.teams);
+          if (Array.isArray(databaseState.players)) setPlayers(databaseState.players);
+          if (Array.isArray(databaseState.rules)) setRules(databaseState.rules);
+          if (Array.isArray(databaseState.fixtures)) setFixtures(databaseState.fixtures);
         }
       } catch (e) {
         console.error('Failed to load application state', e);
@@ -177,8 +177,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: newP.isIcon ? 'ICON' : 'AVAILABLE',
       goalsScored: 0
     };
-    setPlayers(prev => [...prev, created]);
-    void fetch('/api/players', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(created) });
+    void fetch('/api/players', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(created)
+    }).then(async response => {
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.message || 'Unable to save player');
+      }
+      setPlayers(prev => [...prev, created]);
+    }).catch(error => {
+      console.error(error);
+      window.alert(error instanceof Error ? error.message : 'Unable to save player');
+    });
   };
 
   const updatePlayer = (updatedP: Player) => {
@@ -195,17 +207,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const bulkImportPlayers = (newPlayers: Player[], replace: boolean) => {
-    if (replace) {
-      // Preserve existing Icon players if any
-      const existingIcons = players.filter(p => p.isIcon);
-      setPlayers([...existingIcons, ...newPlayers]);
-    } else {
-      setPlayers(prev => [...prev, ...newPlayers]);
-    }
     void fetch('/api/players/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ players: newPlayers, replace })
+    }).then(async response => {
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.message || 'Unable to import players');
+      }
+      setPlayers(previous => replace ? [...previous.filter(player => player.isIcon), ...newPlayers] : [...previous, ...newPlayers]);
+    }).catch(error => {
+      console.error(error);
+      window.alert(error instanceof Error ? error.message : 'Unable to import players');
     });
   };
 
@@ -429,7 +443,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetAllData = () => {
     setTeams(INITIAL_TEAMS);
-    setPlayers([...INITIAL_ICON_PLAYERS, ...INITIAL_POOL_PLAYERS]);
+    setPlayers([]);
     setRules(INITIAL_RULES);
     setFixtures([]);
     setStandingsOverrides({});

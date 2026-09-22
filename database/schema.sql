@@ -41,7 +41,6 @@ CREATE TABLE IF NOT EXISTS players (
   team_id TEXT REFERENCES teams(id) ON DELETE SET NULL,
   goals_scored INTEGER NOT NULL DEFAULT 0 CHECK (goals_scored >= 0),
   assists INTEGER NOT NULL DEFAULT 0 CHECK (assists >= 0),
-  rating INTEGER CHECK (rating IS NULL OR rating BETWEEN 0 AND 100),
   image_url TEXT,
   drive_file_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),

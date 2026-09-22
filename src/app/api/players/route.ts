@@ -15,6 +15,6 @@ export async function POST(request: Request) {
     return NextResponse.json(result.rows[0], { status: 201 });
   } catch (error) {
     console.error('Player creation failed:', error);
-    return NextResponse.json({ message: 'Unable to create player' }, { status: 400 });
+    return NextResponse.json({ message: error instanceof Error ? error.message : 'Unable to create player' }, { status: 400 });
   }
 }
