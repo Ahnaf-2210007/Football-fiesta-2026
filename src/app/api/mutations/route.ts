@@ -17,10 +17,11 @@ export async function POST(request: Request) {
         const player = playerResult.rows[0];
         const team = teamResult.rows[0];
         if (!player || !team) throw new Error('Player or team not found');
-        if ((action === 'markPlayerSold' || action === 'assignGoalkeeper') && player.status !== 'AVAILABLE' && player.status !== 'UNSOLD') throw new Error('Player is no longer available');
-        const squadResult = await client.query('SELECT COUNT(*)::int AS count FROM players WHERE team_id = $1', [teamId]);
+        if ((action === 'markPlayerSold' || action === 'assignGoalkeeper') && player.status !== 'AVAILABLE' && player.status !== 'UNSOLD' && player.status !== 'SOLD') throw new Error('Player is no longer available');
+        await client.query('SELECT team_id, price FROM auction_sales WHERE player_id = $1 FOR UPDATE', [playerId]);
+        const squadResult = await client.query('SELECT COUNT(*)::int AS count FROM players WHERE team_id = $1 AND id <> $2', [teamId, playerId]);
         if (squadResult.rows[0].count >= team.max_squad_size) throw new Error('Team squad limit reached');
-        const spentResult = await client.query('SELECT COALESCE(SUM(price), 0)::int AS spent FROM auction_sales WHERE team_id = $1', [teamId]);
+        const spentResult = await client.query('SELECT COALESCE(SUM(price), 0)::int AS spent FROM auction_sales WHERE team_id = $1 AND player_id <> $2', [teamId, playerId]);
         if (spentResult.rows[0].spent + Number(price) > team.starting_purse) throw new Error('Team budget exceeded');
         const isIcon = action === 'assignIconPlayer';
         await client.query("UPDATE players SET status = $1, is_icon = $2, sold_price = $3, team_id = $4, updated_at = now() WHERE id = $5", [isIcon ? 'ICON' : 'SOLD', isIcon, price, teamId, playerId]);
@@ -41,6 +42,7 @@ export async function POST(request: Request) {
 
     if (action === 'markPlayerUnsold') {
       await query("UPDATE players SET status = 'UNSOLD', team_id = NULL, sold_price = NULL, updated_at = now() WHERE id = $1", [payload.playerId]);
+      await query('DELETE FROM auction_sales WHERE player_id = $1', [payload.playerId]);
       return NextResponse.json({ ok: true });
     }
 

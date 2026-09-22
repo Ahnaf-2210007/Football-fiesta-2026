@@ -358,7 +358,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const markPlayerUnsold = (playerId: string) => {
     setPlayers(prev => prev.map(p => {
       if (p.id === playerId) {
-        return { ...p, status: 'UNSOLD' };
+        return { ...p, status: 'UNSOLD', teamId: undefined, teamName: undefined, soldPrice: undefined };
       }
       return p;
     }));
