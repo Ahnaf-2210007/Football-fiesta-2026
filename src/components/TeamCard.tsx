@@ -24,7 +24,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const teamPlayers = players.filter(p => p.teamId === team.id);
   const displayName = team.name || `Team Slot ${team.id.replace('team-', '')}`;
   const displayOwner = team.owner || 'Not configured';
-  const iconPlayer = players.find(p => p.id === team.iconPlayerId) || teamPlayers.find(p => p.isIcon);
+  const iconPlayer = players.find(p => p.id === team.iconPlayerId);
   const auctionPlayers = teamPlayers.filter(p => !p.isIcon);
 
   const handleSave = (e: React.FormEvent) => {

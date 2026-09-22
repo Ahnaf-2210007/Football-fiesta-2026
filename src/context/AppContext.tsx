@@ -279,7 +279,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const currentPlayer = players.find(p => p.id === playerId);
     setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, status: 'ICON', soldPrice: undefined, teamId: undefined, teamName: undefined } : p));
     setTeams(prev => prev.map(t => {
-      if (t.iconPlayerId === playerId) return { ...t, iconPlayerId: undefined, spentPurse: Math.max(0, t.spentPurse - (currentPlayer?.soldPrice || 0)) };
+      if (t.iconPlayerId === playerId || t.id === currentPlayer?.teamId) {
+        return { ...t, iconPlayerId: undefined, spentPurse: Math.max(0, t.spentPurse - (currentPlayer?.soldPrice || 0)) };
+      }
       return t;
     }));
     persistMutation('unassignIconPlayer', { playerId });
