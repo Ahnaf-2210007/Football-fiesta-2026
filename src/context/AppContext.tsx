@@ -51,8 +51,6 @@ interface AppContextType {
   incrementPlayerGoals: (playerId: string, delta: number) => void;
 
   // Tournament actions
-  performGroupDraw: () => void;
-  restoreCurrentShuffle: () => void;
   updateFixtureScore: (fixtureId: string, team1Score?: number, team2Score?: number, team1Pens?: number, team2Pens?: number) => void;
   updateStandingOverride: (teamId: string, overrideData: Partial<GroupStanding>) => void;
   resetStandingOverrides: () => void;
@@ -423,58 +421,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Group Draw & Fixtures Generator
-  const performGroupDraw = () => {
-    const shuffledTeams = [...teams].sort(() => 0.5 - Math.random());
-    const groupA = shuffledTeams.slice(0, 3);
-    const groupB = shuffledTeams.slice(3, 6);
-
-    const updatedTeams = teams.map(t => {
-      if (groupA.some(a => a.id === t.id)) return { ...t, group: 'A' as const };
-      return { ...t, group: 'B' as const };
-    });
-
-    setTeams(updatedTeams);
-
-    // Create Round-Robin Matches for Group A (3 matches) & Group B (3 matches)
-    const newFixtures: MatchFixture[] = [
-      // Group A Matches
-      { id: 'f-1', matchNo: 1, group: 'A', team1Id: groupA[0].id, team1Name: groupA[0].name, team2Id: groupA[1].id, team2Name: groupA[1].name, isCompleted: false, stageName: 'Group A - Match 1' },
-      { id: 'f-2', matchNo: 2, group: 'A', team1Id: groupA[1].id, team1Name: groupA[1].name, team2Id: groupA[2].id, team2Name: groupA[2].name, isCompleted: false, stageName: 'Group A - Match 2' },
-      { id: 'f-3', matchNo: 3, group: 'A', team1Id: groupA[2].id, team1Name: groupA[2].name, team2Id: groupA[0].id, team2Name: groupA[0].name, isCompleted: false, stageName: 'Group A - Match 3' },
-
-      // Group B Matches
-      { id: 'f-4', matchNo: 4, group: 'B', team1Id: groupB[0].id, team1Name: groupB[0].name, team2Id: groupB[1].id, team2Name: groupB[1].name, isCompleted: false, stageName: 'Group B - Match 1' },
-      { id: 'f-5', matchNo: 5, group: 'B', team1Id: groupB[1].id, team1Name: groupB[1].name, team2Id: groupB[2].id, team2Name: groupB[2].name, isCompleted: false, stageName: 'Group B - Match 2' },
-      { id: 'f-6', matchNo: 6, group: 'B', team1Id: groupB[2].id, team1Name: groupB[2].name, team2Id: groupB[0].id, team2Name: groupB[0].name, isCompleted: false, stageName: 'Group B - Match 3' },
-
-      // Knockout Placeholder Matches
-      { id: 'f-sf1', matchNo: 7, group: 'SEMIFINAL', team1Id: 'tbd-a1', team1Name: 'Winner Group A', team2Id: 'tbd-b2', team2Name: 'Runner-up Group B', isCompleted: false, stageName: 'Semifinal 1' },
-      { id: 'f-sf2', matchNo: 8, group: 'SEMIFINAL', team1Id: 'tbd-b1', team1Name: 'Winner Group B', team2Id: 'tbd-a2', team2Name: 'Runner-up Group A', isCompleted: false, stageName: 'Semifinal 2' },
-      { id: 'f-final', matchNo: 9, group: 'FINAL', team1Id: 'tbd-sf1', team1Name: 'Winner SF1', team2Id: 'tbd-sf2', team2Name: 'Winner SF2', isCompleted: false, stageName: 'Grand Final' }
-    ];
-
-    setFixtures(newFixtures);
-    persistMutation('performGroupDraw', {});
-  };
-
-  const restoreCurrentShuffle = () => {
-    void fetch('/api/mutations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'restoreCurrentShuffle' })
-    }).then(async response => {
-      if (!response.ok) {
-        const result = await response.json().catch(() => ({}));
-        throw new Error(result.message || 'Unable to restore current shuffle');
-      }
-      const stateResponse = await fetch('/api/state', { cache: 'no-store' });
-      if (!stateResponse.ok) throw new Error('Unable to reload shared tournament state');
-      const state = await stateResponse.json();
-      if (Array.isArray(state.teams)) setTeams(state.teams);
-      if (Array.isArray(state.fixtures)) setFixtures(state.fixtures);
-    }).catch(error => console.error(error));
-  };
-
   const updateFixtureScore = (fixtureId: string, team1Score?: number, team2Score?: number, team1Pens?: number, team2Pens?: number) => {
     setFixtures(prev => prev.map(f => {
       if (f.id === fixtureId) {
@@ -578,8 +524,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         deletePlayer,
         bulkImportPlayers,
         incrementPlayerGoals,
-        performGroupDraw,
-        restoreCurrentShuffle,
         updateFixtureScore,
         updateStandingOverride,
         resetStandingOverrides,

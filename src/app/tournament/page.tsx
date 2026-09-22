@@ -5,7 +5,6 @@ import { useApp } from '@/context/AppContext';
 import { GroupStanding } from '@/types';
 import { 
   Trophy, 
-  Shuffle, 
   Calendar, 
   Edit3, 
   RotateCcw, 
@@ -21,8 +20,6 @@ export default function TournamentPage() {
     isAdmin, 
     teams, 
     fixtures, 
-    performGroupDraw, 
-    restoreCurrentShuffle,
     updateFixtureScore, 
     standingsOverrides, 
     updateStandingOverride, 
@@ -30,7 +27,6 @@ export default function TournamentPage() {
   } = useApp();
 
   const [isEditingStandings, setIsEditingStandings] = useState(false);
-  const [showReshuffleModal, setShowReshuffleModal] = useState(false);
 
   // Group A and B teams
   const groupATeams = teams.filter(t => t.group === 'A');
@@ -124,19 +120,6 @@ export default function TournamentPage() {
   const sf2Fixture = fixtures.find(f => f.id === 'f-sf2');
   const finalFixture = fixtures.find(f => f.id === 'f-final');
 
-  const handleGroupDrawClick = () => {
-    if (fixtures.length > 0) {
-      setShowReshuffleModal(true);
-    } else {
-      performGroupDraw();
-    }
-  };
-
-  const handleConfirmReshuffle = () => {
-    setShowReshuffleModal(false);
-    performGroupDraw();
-  };
-
   return (
     <div className="visual-rally rally-tournament max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
       
@@ -152,28 +135,10 @@ export default function TournamentPage() {
           </div>
         </div>
 
-        {isAdmin ? (
-          <div className="flex items-center gap-3">
-            <button
-              onClick={restoreCurrentShuffle}
-              className="px-4 py-3 bg-deep-blue text-light-cyan border border-light-cyan/40 font-bebas text-lg rounded-xl hover:bg-light-cyan/10 transition-all"
-            >
-              Restore Current Shuffle
-            </button>
-            <button
-              onClick={handleGroupDrawClick}
-              className="px-6 py-3 bg-gradient-to-r from-primary-yellow via-vibrant-orange to-fiery-red text-charcoal font-bebas text-xl font-bold tracking-wider rounded-xl shadow-glow-yellow hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-            >
-              <Shuffle size={20} />
-              <span>{fixtures.length > 0 ? 'Reshuffle Groups & Draw' : 'Perform Random Group Draw'}</span>
-            </button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2 text-xs text-gray-400 bg-charcoal/80 px-4 py-2 rounded-xl border border-gray-700">
-            <Lock size={16} className="text-primary-yellow" />
-            <span>Admin login required for group draw & scores</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 text-xs text-gray-400 bg-charcoal/80 px-4 py-2 rounded-xl border border-gray-700">
+          <Lock size={16} className="text-primary-yellow" />
+          <span>Groups are fixed</span>
+        </div>
       </div>
 
       {/* Reshuffle Warning Top-Front Modal Popup */}

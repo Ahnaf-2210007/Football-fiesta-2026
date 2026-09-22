@@ -120,67 +120,11 @@ export async function POST(request: Request) {
     }
 
     if (action === 'performGroupDraw') {
-      const teams = (await query<{ id: string; name: string }>('SELECT id, name FROM teams ORDER BY random()')).rows;
-      if (teams.length < 6) throw new Error('Six teams are required for group draw');
-      for (const [index, team] of teams.entries()) await query('UPDATE teams SET group_name=$2, updated_at=now() WHERE id=$1', [team.id, index < 3 ? 'A' : 'B']);
-      const groupA = teams.slice(0, 3);
-      const groupB = teams.slice(3, 6);
-      const fixtures = [
-        [1, 'A', groupA[0], groupA[1], 'Group A - Match 1'], [2, 'A', groupA[1], groupA[2], 'Group A - Match 2'], [3, 'A', groupA[2], groupA[0], 'Group A - Match 3'],
-        [4, 'B', groupB[0], groupB[1], 'Group B - Match 1'], [5, 'B', groupB[1], groupB[2], 'Group B - Match 2'], [6, 'B', groupB[2], groupB[0], 'Group B - Match 3'],
-        [7, 'SEMIFINAL', { id: 'tbd-a1', name: 'Winner Group A' }, { id: 'tbd-b2', name: 'Runner-up Group B' }, 'Semifinal 1'],
-        [8, 'SEMIFINAL', { id: 'tbd-b1', name: 'Winner Group B' }, { id: 'tbd-a2', name: 'Runner-up Group A' }, 'Semifinal 2'],
-        [9, 'FINAL', { id: 'tbd-sf1', name: 'Winner SF1' }, { id: 'tbd-sf2', name: 'Winner SF2' }, 'Grand Final']
-      ] as const;
-      await query('DELETE FROM fixtures');
-      for (const [matchNo, group, team1, team2, stageName] of fixtures) {
-        const fixtureId = matchNo === 7 ? 'f-sf1' : matchNo === 8 ? 'f-sf2' : matchNo === 9 ? 'f-final' : `f-${matchNo}`;
-        await query('INSERT INTO fixtures (id, match_no, group_name, team1_id, team1_name, team2_id, team2_name, stage_name) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)', [fixtureId, matchNo, group, team1.id, team1.name, team2.id, team2.name, stageName]);
-      }
-      await query(`
-        INSERT INTO tournament_state (id, standings_overrides)
-        VALUES ('current', '{}'::jsonb)
-        ON CONFLICT (id) DO UPDATE SET standings_overrides = '{}'::jsonb, updated_at = now()
-      `);
-      return NextResponse.json({ ok: true });
+      throw new Error('Tournament groups are locked');
     }
 
     if (action === 'restoreCurrentShuffle') {
-      const requestedTeams = [
-        ['A', 'Highline FC'],
-        ['A', 'Imperial FC'],
-        ['A', 'Aie Goal Dimu Boys'],
-        ['B', 'HATTIMATIM TIM - তারা মাঠে পাড়ে ডিম'],
-        ['B', 'Pressure... What Pressure FC'],
-        ['B', 'মুরগির খামার ছেড়ে Mourinho Speaking']
-      ] as const;
-      const names = requestedTeams.map(([, name]) => name);
-      const teamResult = await query<{ id: string; name: string }>('SELECT id, name FROM teams WHERE name = ANY($1::text[])', [names]);
-      const teamsByName = new Map(teamResult.rows.map(team => [team.name, team]));
-      const missing = names.filter(name => !teamsByName.has(name));
-      if (missing.length > 0) throw new Error(`Could not find teams: ${missing.join(', ')}`);
-
-      for (const [group, name] of requestedTeams) {
-        await query('UPDATE teams SET group_name = $2, updated_at = now() WHERE id = $1', [teamsByName.get(name)!.id, group]);
-      }
-
-      const groupA = requestedTeams.slice(0, 3).map(([, name]) => teamsByName.get(name)!);
-      const groupB = requestedTeams.slice(3).map(([, name]) => teamsByName.get(name)!);
-      const fixtures = [
-        ['f-1', 1, 'A', groupA[0], groupA[1], 'Group A - Match 1'], ['f-2', 2, 'A', groupA[1], groupA[2], 'Group A - Match 2'], ['f-3', 3, 'A', groupA[2], groupA[0], 'Group A - Match 3'],
-        ['f-4', 4, 'B', groupB[0], groupB[1], 'Group B - Match 1'], ['f-5', 5, 'B', groupB[1], groupB[2], 'Group B - Match 2'], ['f-6', 6, 'B', groupB[2], groupB[0], 'Group B - Match 3'],
-        ['f-sf1', 7, 'SEMIFINAL', { id: 'tbd-a1', name: 'Winner Group A' }, { id: 'tbd-b2', name: 'Runner-up Group B' }, 'Semifinal 1'],
-        ['f-sf2', 8, 'SEMIFINAL', { id: 'tbd-b1', name: 'Winner Group B' }, { id: 'tbd-a2', name: 'Runner-up Group A' }, 'Semifinal 2'],
-        ['f-final', 9, 'FINAL', { id: 'tbd-sf1', name: 'Winner SF1' }, { id: 'tbd-sf2', name: 'Winner SF2' }, 'Grand Final']
-      ] as const;
-      for (const [id, matchNo, group, team1, team2, stageName] of fixtures) {
-        await query(`
-          INSERT INTO fixtures (id, match_no, group_name, team1_id, team1_name, team2_id, team2_name, stage_name)
-          VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-          ON CONFLICT (id) DO UPDATE SET match_no=$2, group_name=$3, team1_id=$4, team1_name=$5, team2_id=$6, team2_name=$7, stage_name=$8, updated_at=now()
-        `, [id, matchNo, group, team1.id, team1.name, team2.id, team2.name, stageName]);
-      }
-      return NextResponse.json({ ok: true });
+      throw new Error('Tournament groups are locked');
     }
 
     if (action === 'updateStandingOverride') {
