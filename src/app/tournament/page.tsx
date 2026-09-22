@@ -141,43 +141,12 @@ export default function TournamentPage() {
         </div>
       </div>
 
-      {/* Reshuffle Warning Top-Front Modal Popup */}
-      {showReshuffleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">
-          <div className="w-full max-w-lg glass-panel-gold rounded-3xl p-6 sm:p-8 text-white space-y-6 shadow-2xl border-2 border-fiery-red">
-            <div className="flex items-center gap-3 text-fiery-red border-b border-fiery-red/30 pb-3">
-              <Shuffle className="w-8 h-8 animate-spin" />
-              <h3 className="font-bebas text-3xl">CONFIRM GROUP RESHUFFLE</h3>
-            </div>
-            
-            <p className="text-sm font-montserrat text-gray-200 leading-relaxed">
-              ⚠️ <strong>Warning:</strong> You are about to reshuffle the groups. This action will reset all current group assignments, standings, and match fixture results.
-            </p>
-
-            <div className="flex gap-4 pt-2">
-              <button
-                onClick={() => setShowReshuffleModal(false)}
-                className="flex-1 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-bebas text-xl rounded-xl transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmReshuffle}
-                className="flex-1 py-3 bg-gradient-to-r from-fiery-red to-vibrant-orange text-white font-bebas text-xl font-bold rounded-xl shadow-glow-red hover:scale-105 transition-all"
-              >
-                Confirm Reshuffle
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {fixtures.length === 0 ? (
         <div className="glass-panel-gold p-12 rounded-3xl text-center space-y-4 max-w-2xl mx-auto my-12">
-          <Shuffle className="w-16 h-16 text-primary-yellow mx-auto animate-bounce" />
-          <h2 className="font-bebas text-4xl text-white">GROUP DRAW NOT STARTED YET</h2>
+          <Calendar className="w-16 h-16 text-primary-yellow mx-auto animate-bounce" />
+          <h2 className="font-bebas text-4xl text-white">TOURNAMENT FIXTURES NOT AVAILABLE</h2>
           <p className="text-gray-300 text-sm">
-            Click the <strong className="text-primary-yellow">"Perform Random Group Draw"</strong> button above to split the 6 teams into Group A & Group B and generate official fixtures.
+            The fixed tournament groups and fixtures must be initialized in the shared database.
           </p>
         </div>
       ) : (
