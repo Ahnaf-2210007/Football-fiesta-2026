@@ -316,11 +316,12 @@ export default function PlayersDirectoryPage() {
                     onChange={(e) => setNewSeries(e.target.value)}
                     className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-primary-yellow focus:outline-none"
                   >
-                    <option value="19 Series">19 Series</option>
-                    <option value="20 Series">20 Series</option>
                     <option value="21 Series">21 Series</option>
                     <option value="22 Series">22 Series</option>
                     <option value="23 Series">23 Series</option>
+                    <option value="24 Series">24 Series</option>
+                    <option value="25 Series">25 Series</option>
+                    <option value="Alumni">Alumni</option>
                   </select>
                 </div>
               </div>

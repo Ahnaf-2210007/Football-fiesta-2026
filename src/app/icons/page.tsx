@@ -310,7 +310,7 @@ export default function IconPlayersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <input value={newRoll} onChange={e => setNewRoll(e.target.value)} placeholder="Roll number" required className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
                 <select value={newSeries} onChange={e => setNewSeries(e.target.value)} className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white">
-                  <option>19 Series</option><option>20 Series</option><option>21 Series</option><option>22 Series</option><option>23 Series</option>
+                  <option>21 Series</option><option>22 Series</option><option>23 Series</option><option>24 Series</option><option>25 Series</option><option>Alumni</option>
                 </select>
               </div>
               <input value={newRating} onChange={e => setNewRating(e.target.value)} type="number" min="0" max="100" placeholder="Rating (optional)" className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
