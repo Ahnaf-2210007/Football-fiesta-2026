@@ -11,14 +11,15 @@ export default function TeamsPage() {
   const [name, setName] = useState('');
   const [shortName, setShortName] = useState('');
   const [owner, setOwner] = useState('');
+  const [ownerPhotoUrl, setOwnerPhotoUrl] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [color, setColor] = useState('#00B3A4');
 
   const handleAddTeam = (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim() || !shortName.trim() || !owner.trim()) return;
-    addTeam({ id: `team-${Date.now()}`, name: name.trim(), shortName: shortName.trim().toUpperCase(), owner: owner.trim(), logoUrl: logoUrl.trim() || undefined, color, startingPurse: 1500, spentPurse: 0, maxSquadSize: 9 });
-    setName(''); setShortName(''); setOwner(''); setLogoUrl(''); setColor('#00B3A4'); setIsAddOpen(false);
+    addTeam({ id: `team-${Date.now()}`, name: name.trim(), shortName: shortName.trim().toUpperCase(), owner: owner.trim(), ownerPhotoUrl: ownerPhotoUrl.trim() || undefined, logoUrl: logoUrl.trim() || undefined, color, startingPurse: 1500, spentPurse: 0, maxSquadSize: 9 });
+    setName(''); setShortName(''); setOwner(''); setOwnerPhotoUrl(''); setLogoUrl(''); setColor('#00B3A4'); setIsAddOpen(false);
   };
 
   return (
@@ -57,7 +58,7 @@ export default function TeamsPage() {
       </div>
 
       {/* Grid of 6 Team Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {teams.map((team) => (
           <TeamCard
             key={team.id}
@@ -77,6 +78,7 @@ export default function TeamsPage() {
               <input value={name} onChange={e => setName(e.target.value)} placeholder="Team name" required className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
               <input value={shortName} onChange={e => setShortName(e.target.value)} placeholder="Short name" required className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
               <input value={owner} onChange={e => setOwner(e.target.value)} placeholder="Owner / manager name" required className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
+              <input value={ownerPhotoUrl} onChange={e => setOwnerPhotoUrl(e.target.value)} placeholder="Manager image URL (Google Drive / web)" className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white" />
               <input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="Team logo URL (optional)" className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white" />
               <input type="color" value={color} onChange={e => setColor(e.target.value)} className="w-full h-10 bg-deep-blue border border-gray-700 rounded-xl cursor-pointer p-1" />
               <button type="submit" className="w-full py-2.5 bg-primary-yellow text-charcoal font-bebas text-xl font-bold rounded-xl">Create Team</button>

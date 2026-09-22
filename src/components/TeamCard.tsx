@@ -45,23 +45,23 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
 
   return (
     <div 
-      className="glass-panel rounded-3xl overflow-hidden transition-all duration-300 hover:border-primary-yellow/50 hover:shadow-2xl relative group"
+      className="glass-panel rounded-3xl overflow-hidden transition-all duration-300 hover:border-primary-yellow/50 hover:shadow-2xl relative group flex flex-col lg:flex-row"
       style={{ borderTop: `4px solid ${team.color}` }}
     >
       {/* Header Info */}
-      <div className="p-6 bg-gradient-to-b from-deep-blue/90 to-charcoal/90 space-y-4">
+      <div className="p-6 lg:w-5/12 bg-gradient-to-b from-deep-blue/90 to-charcoal/90 space-y-4">
         <div className="flex items-start justify-between gap-4">
           
           {/* Logo & Team Title */}
           <div className="flex items-center gap-4">
             <div 
-              className="w-16 h-16 rounded-2xl overflow-hidden bg-charcoal border-2 flex items-center justify-center shrink-0 shadow-md"
+              className="w-24 h-24 rounded-2xl overflow-hidden bg-charcoal border-2 flex items-center justify-center shrink-0 shadow-md"
               style={{ borderColor: team.color }}
             >
               {logoUrl ? (
                 <img 
                   src={logoUrl} 
-                  alt={team.name} 
+                  alt={displayName} 
                   className="w-full h-full object-cover" 
                   onError={(e) => handleImageError(e, team.logoUrl)}
                 />
@@ -105,7 +105,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
 
         {/* Manager Banner Showcase */}
         <div className="flex items-center gap-3 bg-charcoal/90 p-3 rounded-2xl border border-gray-800">
-          <div className="w-12 h-12 rounded-xl bg-deep-blue border border-gray-700 overflow-hidden flex items-center justify-center shrink-0 shadow-md">
+          <div className="w-16 h-16 rounded-xl bg-deep-blue border border-gray-700 overflow-hidden flex items-center justify-center shrink-0 shadow-md">
             {managerPhoto ? (
               <img 
                 src={managerPhoto} 
@@ -136,7 +136,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
       </div>
 
       {/* Roster Breakdown with Player Photos & Names */}
-      <div className="p-6 border-t border-gray-800/80 space-y-4">
+      <div className="p-6 lg:w-7/12 border-t lg:border-t-0 lg:border-l border-gray-800/80 space-y-4">
         
         {/* Icon Player Section */}
         <div>
@@ -178,7 +178,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
           </h4>
 
           {auctionPlayers.length > 0 ? (
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
               {auctionPlayers.map((p) => (
                 <div key={p.id} className="flex items-center gap-3 p-2 bg-charcoal/70 hover:bg-deep-blue/70 rounded-xl text-xs transition-colors border border-gray-800">
                   <div className="w-9 h-9 rounded-lg bg-charcoal border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
