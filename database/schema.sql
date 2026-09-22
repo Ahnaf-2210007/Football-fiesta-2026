@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS teams (
 );
 
 ALTER TABLE teams ADD COLUMN IF NOT EXISTS icon_player_id TEXT;
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS group_name TEXT;
 ALTER TABLE teams ALTER COLUMN max_squad_size SET DEFAULT 11;
 UPDATE teams SET max_squad_size = 11 WHERE max_squad_size IN (9, 10);
 
@@ -92,6 +93,12 @@ CREATE TABLE IF NOT EXISTS fixtures (
   stage_name TEXT NOT NULL,
   time_slot TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS tournament_state (
+  id TEXT PRIMARY KEY,
+  standings_overrides JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

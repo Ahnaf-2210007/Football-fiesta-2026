@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const [teamsResult, playersResult, rulesResult, fixturesResult] = await Promise.all([
+    const [teamsResult, playersResult, rulesResult, fixturesResult, tournamentStateResult] = await Promise.all([
             query(`
          SELECT teams.id, teams.name, short_name AS "shortName", owners.name AS owner,
            owners.image_url AS "ownerPhotoUrl", logo_url AS "logoUrl", color,
@@ -52,10 +52,21 @@ export async function GET() {
                team1_pens AS "team1Pens", team2_pens AS "team2Pens",
                is_completed AS "isCompleted", stage_name AS "stageName", time_slot AS "timeSlot"
         FROM fixtures ORDER BY match_no
+      `),
+      query(`
+        SELECT standings_overrides AS "standingsOverrides"
+        FROM tournament_state WHERE id = 'current'
       `)
     ]);
 
-    return NextResponse.json({ teams: teamsResult.rows, players: playersResult.rows, rules: rulesResult.rows, fixtures: fixturesResult.rows, source: 'database' });
+    return NextResponse.json({
+      teams: teamsResult.rows,
+      players: playersResult.rows,
+      rules: rulesResult.rows,
+      fixtures: fixturesResult.rows,
+      standingsOverrides: tournamentStateResult.rows[0]?.standingsOverrides || {},
+      source: 'database'
+    });
   } catch (error) {
     console.error('Database state load failed:', error);
     return NextResponse.json({
@@ -63,7 +74,8 @@ export async function GET() {
       players: [],
       rules: INITIAL_RULES,
       fixtures: [],
+      standingsOverrides: {},
       source: 'database-unavailable'
-    });
+    }, { status: 503 });
   }
 }

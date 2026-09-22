@@ -52,6 +52,7 @@ interface AppContextType {
 
   // Tournament actions
   performGroupDraw: () => void;
+  restoreCurrentShuffle: () => void;
   updateFixtureScore: (fixtureId: string, team1Score?: number, team2Score?: number, team1Pens?: number, team2Pens?: number) => void;
   updateStandingOverride: (teamId: string, overrideData: Partial<GroupStanding>) => void;
   resetStandingOverrides: () => void;
@@ -109,6 +110,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (Array.isArray(databaseState.players)) setPlayers(databaseState.players);
           if (Array.isArray(databaseState.rules)) setRules(databaseState.rules);
           if (Array.isArray(databaseState.fixtures)) setFixtures(databaseState.fixtures);
+          if (databaseState.standingsOverrides && typeof databaseState.standingsOverrides === 'object') {
+            setStandingsOverrides(databaseState.standingsOverrides);
+          }
         }
       } catch (e) {
         console.error('Failed to load application state', e);
@@ -453,6 +457,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     persistMutation('performGroupDraw', {});
   };
 
+  const restoreCurrentShuffle = () => {
+    void fetch('/api/mutations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'restoreCurrentShuffle' })
+    }).then(async response => {
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.message || 'Unable to restore current shuffle');
+      }
+      const stateResponse = await fetch('/api/state', { cache: 'no-store' });
+      if (!stateResponse.ok) throw new Error('Unable to reload shared tournament state');
+      const state = await stateResponse.json();
+      if (Array.isArray(state.teams)) setTeams(state.teams);
+      if (Array.isArray(state.fixtures)) setFixtures(state.fixtures);
+    }).catch(error => console.error(error));
+  };
+
   const updateFixtureScore = (fixtureId: string, team1Score?: number, team2Score?: number, team1Pens?: number, team2Pens?: number) => {
     setFixtures(prev => prev.map(f => {
       if (f.id === fixtureId) {
@@ -473,14 +495,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateStandingOverride = (teamId: string, overrideData: Partial<GroupStanding>) => {
+    const nextOverride = { ...overrideData, manualOverride: true };
     setStandingsOverrides(prev => ({
       ...prev,
-      [teamId]: { ...(prev[teamId] || {}), ...overrideData, manualOverride: true }
+      [teamId]: { ...(prev[teamId] || {}), ...nextOverride }
     }));
+    persistMutation('updateStandingOverride', { teamId, overrideData: nextOverride });
   };
 
   const resetStandingOverrides = () => {
     setStandingsOverrides({});
+    persistMutation('resetStandingOverrides', {});
   };
 
   // Rule actions
@@ -554,6 +579,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bulkImportPlayers,
         incrementPlayerGoals,
         performGroupDraw,
+        restoreCurrentShuffle,
         updateFixtureScore,
         updateStandingOverride,
         resetStandingOverrides,

@@ -22,6 +22,7 @@ export default function TournamentPage() {
     teams, 
     fixtures, 
     performGroupDraw, 
+    restoreCurrentShuffle,
     updateFixtureScore, 
     standingsOverrides, 
     updateStandingOverride, 
@@ -153,6 +154,12 @@ export default function TournamentPage() {
 
         {isAdmin ? (
           <div className="flex items-center gap-3">
+            <button
+              onClick={restoreCurrentShuffle}
+              className="px-4 py-3 bg-deep-blue text-light-cyan border border-light-cyan/40 font-bebas text-lg rounded-xl hover:bg-light-cyan/10 transition-all"
+            >
+              Restore Current Shuffle
+            </button>
             <button
               onClick={handleGroupDrawClick}
               className="px-6 py-3 bg-gradient-to-r from-primary-yellow via-vibrant-orange to-fiery-red text-charcoal font-bebas text-xl font-bold tracking-wider rounded-xl shadow-glow-yellow hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
