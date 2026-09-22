@@ -60,7 +60,12 @@ export async function POST(request: Request) {
         const owner = await query<{ id: string }>('INSERT INTO team_owners (name, image_url) VALUES ($1, $2) RETURNING id', [t.owner, t.ownerPhotoUrl ?? null]);
         ownerId = owner.rows[0].id;
       }
-      await query('UPDATE teams SET name=$2, logo_url=$3, color=$4, owner_id=$5, updated_at=now() WHERE id=$1', [t.id, t.name, t.logoUrl ?? null, t.color, ownerId]);
+      await query(`
+        INSERT INTO teams (id, name, short_name, logo_url, color, starting_purse, max_squad_size, owner_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (id) DO UPDATE SET name=$2, short_name=$3, logo_url=$4, color=$5,
+          starting_purse=$6, max_squad_size=$7, owner_id=$8, updated_at=now()
+      `, [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, t.maxSquadSize ?? 10, ownerId]);
       return NextResponse.json({ ok: true });
     }
 

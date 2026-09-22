@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server';
 import { INITIAL_RULES, INITIAL_TEAMS } from '@/data/initialData';
+
+const EMPTY_TEAMS = INITIAL_TEAMS.map((team) => ({
+  ...team,
+  name: '',
+  shortName: '',
+  owner: '',
+  ownerPhotoUrl: undefined,
+  logoUrl: undefined,
+  group: undefined
+}));
 import { query } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -41,7 +51,7 @@ export async function GET() {
   } catch (error) {
     console.error('Database state load failed:', error);
     return NextResponse.json({
-      teams: INITIAL_TEAMS,
+      teams: EMPTY_TEAMS,
       players: [],
       rules: INITIAL_RULES,
       fixtures: [],

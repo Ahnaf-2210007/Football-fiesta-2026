@@ -4,6 +4,20 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Team, Player, MatchFixture, GroupStanding, TournamentRule } from '../types';
 import { INITIAL_TEAMS, INITIAL_RULES } from '../data/initialData';
 
+const EMPTY_TEAMS: Team[] = INITIAL_TEAMS.map((team, index) => ({
+  id: team.id || `team-${index + 1}`,
+  name: '',
+  shortName: '',
+  owner: '',
+  logoUrl: undefined,
+  ownerPhotoUrl: undefined,
+  color: team.color,
+  startingPurse: 1500,
+  spentPurse: 0,
+  maxSquadSize: 10,
+  group: undefined
+}));
+
 interface AppContextType {
   isAdmin: boolean;
   loginAdmin: (password: string) => Promise<boolean>;
@@ -54,7 +68,7 @@ const LOCAL_STORAGE_KEY = 'ECE_FOOTBALL_FIESTA_V1';
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [teams, setTeams] = useState<Team[]>(INITIAL_TEAMS);
+  const [teams, setTeams] = useState<Team[]>(EMPTY_TEAMS);
   const [players, setPlayers] = useState<Player[]>([]);
   const [rules, setRules] = useState<TournamentRule[]>(INITIAL_RULES);
   const [fixtures, setFixtures] = useState<MatchFixture[]>([]);
@@ -87,7 +101,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const response = await fetch('/api/state', { cache: 'no-store' });
         if (response.ok) {
           const databaseState = await response.json();
-          if (Array.isArray(databaseState.teams)) setTeams(databaseState.teams);
+          if (Array.isArray(databaseState.teams)) setTeams(databaseState.teams.length ? databaseState.teams : EMPTY_TEAMS);
           if (Array.isArray(databaseState.players)) setPlayers(databaseState.players);
           if (Array.isArray(databaseState.rules)) setRules(databaseState.rules);
           if (Array.isArray(databaseState.fixtures)) setFixtures(databaseState.fixtures);
@@ -442,7 +456,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetAllData = () => {
-    setTeams(INITIAL_TEAMS);
+    setTeams(EMPTY_TEAMS);
     setPlayers([]);
     setRules(INITIAL_RULES);
     setFixtures([]);

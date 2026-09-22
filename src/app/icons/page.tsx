@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { Player, PlayerPosition } from '@/types';
-import { Crown, Lock, CheckCircle2, Shield, User, Wallet, Edit2, X } from 'lucide-react';
+import { Crown, Lock, CheckCircle2, Shield, User, Wallet, Edit2, X, UserPlus } from 'lucide-react';
 
 const getGoogleDriveFileId = (value: string) => {
   const match = value.match(/(?:\/file\/d\/|[?&]id=|\/uc\?id=)([a-zA-Z0-9_-]+)/);
@@ -23,7 +23,7 @@ const normalizeImageUrl = (value: unknown) => {
 };
 
 export default function IconPlayersPage() {
-  const { isAdmin, teams, players, assignIconPlayer, updatePlayer } = useApp();
+  const { isAdmin, teams, players, addPlayer, assignIconPlayer, updatePlayer } = useApp();
 
   // State for inline assignment forms for each icon player
   const [inlinePrice, setInlinePrice] = useState<Record<string, number>>({});
@@ -32,8 +32,44 @@ export default function IconPlayersPage() {
 
   // State for editing icon player modal
   const [editingIcon, setEditingIcon] = useState<Player | null>(null);
+  const [addingType, setAddingType] = useState<'ICON' | 'GOALKEEPER' | null>(null);
+  const [newName, setNewName] = useState('');
+  const [newRoll, setNewRoll] = useState('');
+  const [newSeries, setNewSeries] = useState('21 Series');
+  const [newPhotoUrl, setNewPhotoUrl] = useState('');
+  const [newRating, setNewRating] = useState('');
 
   const iconPlayers = players.filter(p => p.isIcon);
+  const goalkeepers = players.filter(p => !p.isIcon && p.position === 'GOALKEEPER');
+
+  const resetAddForm = () => {
+    setNewName('');
+    setNewRoll('');
+    setNewSeries('21 Series');
+    setNewPhotoUrl('');
+    setNewRating('');
+    setAddingType(null);
+  };
+
+  const handleAddPlayer = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!addingType || !newName.trim() || !newRoll.trim()) return;
+
+    const isIcon = addingType === 'ICON';
+    const position: PlayerPosition = isIcon ? 'FORWARD' : 'GOALKEEPER';
+    const photoUrl = normalizeImageUrl(newPhotoUrl);
+
+    addPlayer({
+      name: newName.trim(),
+      roll: newRoll.trim(),
+      series: newSeries,
+      position,
+      isIcon,
+      photoUrl,
+      rating: newRating ? Number(newRating) : undefined
+    });
+    resetAddForm();
+  };
 
   const handleAssign = (playerId: string) => {
     const price = inlinePrice[playerId] || 150;
@@ -81,6 +117,41 @@ export default function IconPlayersPage() {
           </div>
         )}
       </div>
+
+      {isAdmin && (
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setAddingType('ICON')}
+            disabled={iconPlayers.length >= 6}
+            className="px-4 py-2.5 bg-primary-yellow text-charcoal font-bebas text-lg font-bold rounded-xl shadow-glow-yellow disabled:opacity-40 flex items-center gap-2"
+          >
+            <UserPlus size={18} /> Add Icon Player ({iconPlayers.length}/6)
+          </button>
+          <button
+            onClick={() => setAddingType('GOALKEEPER')}
+            disabled={goalkeepers.length >= 6}
+            className="px-4 py-2.5 bg-teal text-charcoal font-bebas text-lg font-bold rounded-xl shadow-glow-cyan disabled:opacity-40 flex items-center gap-2"
+          >
+            <UserPlus size={18} /> Add Goalkeeper ({goalkeepers.length}/6)
+          </button>
+        </div>
+      )}
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between border-b border-primary-yellow/30 pb-3">
+          <h2 className="font-bebas text-3xl text-primary-yellow">ICON PLAYERS · {iconPlayers.length}/6</h2>
+          <span className="text-xs text-gray-400">Six pre-auction icon slots</span>
+        </div>
+        {iconPlayers.length === 0 && <p className="text-sm text-gray-500">No icon players added yet.</p>}
+      </section>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between border-b border-teal/30 pb-3">
+          <h2 className="font-bebas text-3xl text-teal">GOALKEEPERS · {goalkeepers.length}/6</h2>
+          <span className="text-xs text-gray-400">Six goalkeeper slots for the tournament pool</span>
+        </div>
+        {goalkeepers.length === 0 && <p className="text-sm text-gray-500">No goalkeepers added yet.</p>}
+      </section>
 
       {/* Grid of Icon Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -204,6 +275,51 @@ export default function IconPlayersPage() {
           );
         })}
       </div>
+
+      <section className="space-y-4">
+        <div className="flex items-center justify-between border-b border-teal/30 pb-3">
+          <h2 className="font-bebas text-3xl text-teal">GOALKEEPER DETAILS</h2>
+          <span className="text-xs text-gray-400">{goalkeepers.length} of 6 added</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {goalkeepers.map(goalkeeper => (
+            <div key={goalkeeper.id} className="glass-panel rounded-3xl p-6 flex items-center gap-4 border border-teal/30">
+              <div className="w-20 h-20 rounded-2xl bg-charcoal border-2 border-teal overflow-hidden shrink-0 flex items-center justify-center">
+                {goalkeeper.photoUrl ? <img src={goalkeeper.photoUrl} alt={goalkeeper.name} className="w-full h-full object-cover" /> : <User className="w-12 h-12 text-gray-400" />}
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bebas text-2xl text-white truncate">{goalkeeper.name}</h3>
+                <p className="text-xs text-gray-400">Roll: <span className="text-teal font-mono">{goalkeeper.roll}</span> · {goalkeeper.series}</p>
+                {goalkeeper.rating !== undefined && <p className="text-xs text-primary-yellow mt-1">Rating: {goalkeeper.rating}</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {addingType && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-8 sm:pt-16 overflow-y-auto bg-black/80 backdrop-blur-md p-4">
+          <div className="relative w-full max-w-md glass-panel-gold rounded-3xl p-6 text-white space-y-4 shadow-2xl border-2 border-primary-yellow/50">
+            <button onClick={resetAddForm} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X size={20} /></button>
+            <div className="flex items-center gap-2 border-b border-primary-yellow/30 pb-3">
+              {addingType === 'ICON' ? <Crown className="text-primary-yellow" /> : <Shield className="text-teal" />}
+              <h3 className="font-bebas text-3xl text-primary-yellow">Add {addingType === 'ICON' ? 'Icon Player' : 'Goalkeeper'}</h3>
+            </div>
+            <form onSubmit={handleAddPlayer} className="space-y-4">
+              <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Full name" required className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
+              <div className="grid grid-cols-2 gap-4">
+                <input value={newRoll} onChange={e => setNewRoll(e.target.value)} placeholder="Roll number" required className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
+                <select value={newSeries} onChange={e => setNewSeries(e.target.value)} className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white">
+                  <option>19 Series</option><option>20 Series</option><option>21 Series</option><option>22 Series</option><option>23 Series</option>
+                </select>
+              </div>
+              <input value={newRating} onChange={e => setNewRating(e.target.value)} type="number" min="0" max="100" placeholder="Rating (optional)" className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
+              <input value={newPhotoUrl} onChange={e => setNewPhotoUrl(e.target.value)} placeholder="Google Drive image URL" className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white" />
+              <button type="submit" className="w-full py-2.5 bg-primary-yellow text-charcoal font-bebas text-xl font-bold rounded-xl shadow-glow-yellow">Save Player</button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Edit Icon Player Modal */}
       {editingIcon && (

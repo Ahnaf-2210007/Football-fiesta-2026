@@ -22,6 +22,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const [editColor, setEditColor] = useState(team.color);
 
   const teamPlayers = players.filter(p => p.teamId === team.id);
+  const displayName = team.name || `Team Slot ${team.id.replace('team-', '')}`;
+  const displayOwner = team.owner || 'Not configured';
   const iconPlayer = teamPlayers.find(p => p.isIcon);
   const auctionPlayers = teamPlayers.filter(p => !p.isIcon);
 
@@ -70,7 +72,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
 
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-bebas text-3xl tracking-wide text-white">{team.name}</h3>
+                <h3 className="font-bebas text-3xl tracking-wide text-white">{displayName}</h3>
                 <span className="text-xs font-bebas px-2 py-0.5 rounded bg-deep-blue text-light-cyan border border-light-cyan/30">
                   {team.shortName}
                 </span>
@@ -117,7 +119,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
           </div>
           <div>
             <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">Team Manager</span>
-            <p className="text-sm font-bold text-white">{team.owner}</p>
+                <p className="text-sm font-bold text-white">{displayOwner}</p>
           </div>
         </div>
 
