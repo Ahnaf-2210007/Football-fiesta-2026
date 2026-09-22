@@ -96,6 +96,29 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (action === 'removeTeam') {
+      const client = await (await import('@/lib/db')).pool?.connect();
+      if (!client) throw new Error('DATABASE_URL is not configured');
+      try {
+        await client.query('BEGIN');
+        const teamResult = await client.query('SELECT owner_id FROM teams WHERE id = $1 FOR UPDATE', [payload.teamId]);
+        if (!teamResult.rows[0]) throw new Error('Team not found');
+        await client.query("UPDATE players SET team_id = NULL, sold_price = NULL, status = CASE WHEN is_icon THEN 'ICON' ELSE 'AVAILABLE' END, updated_at = now() WHERE team_id = $1", [payload.teamId]);
+        await client.query('DELETE FROM auction_sales WHERE team_id = $1', [payload.teamId]);
+        await client.query('DELETE FROM teams WHERE id = $1', [payload.teamId]);
+        if (teamResult.rows[0].owner_id) {
+          await client.query('DELETE FROM team_owners owner_record WHERE owner_record.id = $1 AND NOT EXISTS (SELECT 1 FROM teams WHERE owner_id = owner_record.id)', [teamResult.rows[0].owner_id]);
+        }
+        await client.query('COMMIT');
+        return NextResponse.json({ ok: true });
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
+    }
+
     if (action === 'performGroupDraw') {
       const teams = (await query<{ id: string; name: string }>('SELECT id, name FROM teams ORDER BY random()')).rows;
       if (teams.length < 6) throw new Error('Six teams are required for group draw');

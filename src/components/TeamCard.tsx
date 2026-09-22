@@ -13,7 +13,7 @@ interface TeamCardProps {
 }
 
 export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = false }) => {
-  const { isAdmin, updateTeam } = useApp();
+  const { isAdmin, updateTeam, removeTeam } = useApp();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(team.name);
   const [editOwner, setEditOwner] = useState(team.owner);
@@ -86,6 +86,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
           </div>
 
           {isAdmin && editable && (
+            <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 setEditName(team.name);
@@ -100,6 +101,18 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
             >
               <Edit2 size={16} />
             </button>
+            <button
+              onClick={() => {
+                if (window.confirm(`Remove ${displayName}? Its players will return to the pool.`)) {
+                  removeTeam(team.id);
+                }
+              }}
+              className="p-2 bg-fiery-red/90 hover:bg-fiery-red text-white rounded-xl border border-fiery-red/60 transition-colors shadow-md shrink-0"
+              title="Remove Team"
+            >
+              <X size={16} />
+            </button>
+            </div>
           )}
         </div>
 

@@ -24,7 +24,13 @@ export async function GET() {
                starting_purse AS "startingPurse",
                COALESCE((SELECT SUM(price) FROM auction_sales s WHERE s.team_id = teams.id), 0)::int AS "spentPurse",
                max_squad_size AS "maxSquadSize", group_name AS "group", owner_id AS "ownerId",
-               icon_player_id AS "iconPlayerId"
+               CASE WHEN EXISTS (
+                 SELECT 1 FROM players icon_check
+                 WHERE icon_check.id = teams.icon_player_id
+                   AND icon_check.team_id = teams.id
+                   AND icon_check.is_icon = true
+                   AND icon_check.status = 'ICON'
+               ) THEN icon_player_id ELSE NULL END AS "iconPlayerId"
          FROM teams LEFT JOIN team_owners owners ON owners.id = teams.owner_id
          ORDER BY teams.created_at, teams.id
       `),

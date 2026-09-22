@@ -40,6 +40,7 @@ interface AppContextType {
   unassignIconPlayer: (playerId: string) => void;
   assignGoalkeeper: (playerId: string, teamId: string, price: number) => void;
   addTeam: (team: Team) => void;
+  removeTeam: (teamId: string) => void;
 
   // Management actions
   updateTeam: (updatedTeam: Team) => void;
@@ -305,6 +306,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     persistMutation('addTeam', { team: team as unknown as Record<string, unknown> });
   };
 
+  const removeTeam = (teamId: string) => {
+    setTeams(prev => prev.filter(team => team.id !== teamId));
+    setPlayers(prev => prev.map(player => player.teamId === teamId ? {
+      ...player,
+      teamId: undefined,
+      teamName: undefined,
+      soldPrice: undefined,
+      status: player.isIcon ? 'ICON' : 'AVAILABLE'
+    } : player));
+    persistMutation('removeTeam', { teamId });
+  };
+
   // Bidding & Live Auction
   const getAuctionCandidates = (excludedPlayerId?: string) => players.filter(p =>
     !p.isIcon &&
@@ -533,6 +546,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         unassignIconPlayer,
         assignGoalkeeper,
         addTeam,
+        removeTeam,
         updateTeam,
         addPlayer,
         updatePlayer,
