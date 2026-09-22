@@ -49,7 +49,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
       style={{ borderTop: `4px solid ${team.color}` }}
     >
       {/* Header Info */}
-      <div className="p-6 lg:w-5/12 bg-gradient-to-b from-deep-blue/90 to-charcoal/90 space-y-4">
+      <div className="p-5 lg:w-4/12 bg-gradient-to-b from-deep-blue/90 to-charcoal/90 space-y-3">
         <div className="flex items-start justify-between gap-4">
           
           {/* Logo & Team Title */}
@@ -136,7 +136,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
       </div>
 
       {/* Roster Breakdown with Player Photos & Names */}
-      <div className="p-6 lg:w-7/12 border-t lg:border-t-0 lg:border-l border-gray-800/80 space-y-4">
+      <div className="p-5 lg:w-8/12 border-t lg:border-t-0 lg:border-l border-gray-800/80 space-y-3">
         
         {/* Icon Player Section */}
         <div>
@@ -178,10 +178,10 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
           </h4>
 
           {auctionPlayers.length > 0 ? (
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {auctionPlayers.map((p) => (
-                <div key={p.id} className="flex items-center gap-3 p-2 bg-charcoal/70 hover:bg-deep-blue/70 rounded-xl text-xs transition-colors border border-gray-800">
-                  <div className="w-9 h-9 rounded-lg bg-charcoal border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+                <div key={p.id} className="flex items-center gap-2 p-2 bg-charcoal/70 hover:bg-deep-blue/70 rounded-xl text-xs transition-colors border border-gray-800 min-h-[68px]">
+                  <div className="w-12 h-14 rounded-lg bg-charcoal border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
                     {p.photoUrl ? (
                       <img 
                         src={normalizeImageUrl(p.photoUrl)} 
@@ -190,7 +190,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
                         onError={(e) => handleImageError(e, p.photoUrl)}
                       />
                     ) : (
-                      <User size={16} className="text-gray-400" />
+                      <User size={18} className="text-gray-400" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">

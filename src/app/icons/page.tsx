@@ -323,7 +323,6 @@ export default function IconPlayersPage() {
                   <div className="min-w-0">
                     <h3 className="font-bebas text-3xl text-white truncate">{goalkeeper.name}</h3>
                     <p className="text-xs text-gray-400">Roll: <span className="text-teal font-mono">{goalkeeper.roll}</span> · {goalkeeper.series}</p>
-                    {goalkeeper.rating !== undefined && <p className="text-xs text-primary-yellow mt-1">Rating: {goalkeeper.rating}</p>}
                   </div>
                 </div>
 
@@ -381,7 +380,7 @@ export default function IconPlayersPage() {
                   <option>21 Series</option><option>22 Series</option><option>23 Series</option><option>24 Series</option><option>25 Series</option><option>Alumni</option>
                 </select>
               </div>
-              <input value={newRating} onChange={e => setNewRating(e.target.value)} type="number" min="0" max="100" placeholder="Rating (optional)" className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />
+              {addingType === 'ICON' && <input value={newRating} onChange={e => setNewRating(e.target.value)} type="number" min="0" max="100" placeholder="Rating (optional)" className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white" />}
               <input value={newPhotoUrl} onChange={e => setNewPhotoUrl(e.target.value)} placeholder="Google Drive image URL" className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white" />
               <button type="submit" className="w-full py-2.5 bg-primary-yellow text-charcoal font-bebas text-xl font-bold rounded-xl shadow-glow-yellow">Save Player</button>
             </form>
