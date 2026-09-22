@@ -79,7 +79,7 @@ export default function AuctionStagePage() {
     const teamSpent = players.filter(p => p.teamId === team.id).reduce((sum, p) => sum + (p.soldPrice || 0), 0);
     const teamRemaining = team.startingPurse - teamSpent;
 
-    if (bidPrice > teamRemaining) {
+    if (currentStagePlayer.status !== 'UNSOLD' && bidPrice > teamRemaining) {
       setBiddingError(`Bidding price (${bidPrice} TK) exceeds ${team.name}'s remaining budget (${teamRemaining} TK).`);
       return;
     }

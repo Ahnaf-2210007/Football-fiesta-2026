@@ -22,7 +22,8 @@ export async function POST(request: Request) {
         const squadResult = await client.query('SELECT COUNT(*)::int AS count FROM players WHERE team_id = $1 AND id <> $2', [teamId, playerId]);
         if (squadResult.rows[0].count >= team.max_squad_size) throw new Error('Team squad limit reached');
         const spentResult = await client.query('SELECT COALESCE(SUM(price), 0)::int AS spent FROM auction_sales WHERE team_id = $1 AND player_id <> $2', [teamId, playerId]);
-        if (spentResult.rows[0].spent + Number(price) > team.starting_purse) throw new Error('Team budget exceeded');
+        const isUnsoldAssignment = player.status === 'UNSOLD';
+        if (!isUnsoldAssignment && spentResult.rows[0].spent + Number(price) > team.starting_purse) throw new Error('Team budget exceeded');
         const isIcon = action === 'assignIconPlayer';
         await client.query("UPDATE players SET status = $1, is_icon = $2, sold_price = $3, team_id = $4, updated_at = now() WHERE id = $5", [isIcon ? 'ICON' : 'SOLD', isIcon, price, teamId, playerId]);
         if (isIcon) {
