@@ -23,11 +23,16 @@ CREATE TABLE IF NOT EXISTS teams (
   logo_url TEXT,
   color TEXT NOT NULL,
   starting_purse INTEGER NOT NULL DEFAULT 1500 CHECK (starting_purse >= 0),
-  max_squad_size INTEGER NOT NULL DEFAULT 10 CHECK (max_squad_size > 0),
+  max_squad_size INTEGER NOT NULL DEFAULT 9 CHECK (max_squad_size > 0),
+  icon_player_id TEXT,
   group_name TEXT CHECK (group_name IN ('A', 'B')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS icon_player_id TEXT;
+ALTER TABLE teams ALTER COLUMN max_squad_size SET DEFAULT 9;
+UPDATE teams SET max_squad_size = 9 WHERE max_squad_size = 10;
 
 CREATE TABLE IF NOT EXISTS players (
   id TEXT PRIMARY KEY,
@@ -46,6 +51,10 @@ CREATE TABLE IF NOT EXISTS players (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE teams DROP CONSTRAINT IF EXISTS teams_icon_player_id_fkey;
+ALTER TABLE teams ADD CONSTRAINT teams_icon_player_id_fkey
+  FOREIGN KEY (icon_player_id) REFERENCES players(id) ON DELETE SET NULL;
 
 CREATE TABLE IF NOT EXISTS auction_sales (
   id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,

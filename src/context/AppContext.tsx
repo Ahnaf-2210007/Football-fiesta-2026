@@ -14,7 +14,7 @@ const EMPTY_TEAMS: Team[] = INITIAL_TEAMS.map((team, index) => ({
   color: team.color,
   startingPurse: 1500,
   spentPurse: 0,
-  maxSquadSize: 10,
+  maxSquadSize: 9,
   group: undefined
 }));
 
@@ -37,6 +37,9 @@ interface AppContextType {
   markPlayerSold: (playerId: string, teamId: string, price: number) => void;
   markPlayerUnsold: (playerId: string) => void;
   assignIconPlayer: (playerId: string, teamId: string, price: number) => void;
+  unassignIconPlayer: (playerId: string) => void;
+  assignGoalkeeper: (playerId: string, teamId: string, price: number) => void;
+  addTeam: (team: Team) => void;
 
   // Management actions
   updateTeam: (updatedTeam: Team) => void;
@@ -272,6 +275,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     persistMutation('assignIconPlayer', { playerId, teamId, price });
   };
 
+  const unassignIconPlayer = (playerId: string) => {
+    setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, status: 'ICON', soldPrice: undefined, teamId: undefined, teamName: undefined } : p));
+    setTeams(prev => prev.map(t => t.iconPlayerId === playerId ? { ...t, iconPlayerId: undefined } : t));
+    persistMutation('unassignIconPlayer', { playerId });
+  };
+
+  const assignGoalkeeper = (playerId: string, teamId: string, price: number) => {
+    const targetTeam = teams.find(t => t.id === teamId);
+    if (!targetTeam) return;
+    setPlayers(prev => prev.map(p => p.id === playerId ? { ...p, status: 'SOLD', soldPrice: price, teamId, teamName: targetTeam.name } : p));
+    setTeams(prev => prev.map(t => t.id === teamId ? { ...t, spentPurse: t.spentPurse + price } : t));
+    persistMutation('assignGoalkeeper', { playerId, teamId, price });
+  };
+
+  const addTeam = (team: Team) => {
+    setTeams(prev => [...prev, team]);
+    persistMutation('addTeam', { team: team as unknown as Record<string, unknown> });
+  };
+
   // Bidding & Live Auction
   const drawNextRandomPlayer = (): Player | null => {
     const available = players.filter(p => !p.isIcon && p.status === 'AVAILABLE');
@@ -484,6 +506,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         markPlayerSold,
         markPlayerUnsold,
         assignIconPlayer,
+        unassignIconPlayer,
+        assignGoalkeeper,
+        addTeam,
         updateTeam,
         addPlayer,
         updatePlayer,

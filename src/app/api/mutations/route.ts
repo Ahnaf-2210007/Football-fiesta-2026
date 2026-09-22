@@ -6,7 +6,7 @@ export async function POST(request: Request) {
   const { action } = payload;
 
   try {
-    if (action === 'markPlayerSold' || action === 'assignIconPlayer') {
+    if (action === 'markPlayerSold' || action === 'assignIconPlayer' || action === 'assignGoalkeeper') {
       const { playerId, teamId, price } = payload;
       const client = await (await import('@/lib/db')).pool?.connect();
       if (!client) throw new Error('DATABASE_URL is not configured');
@@ -17,12 +17,17 @@ export async function POST(request: Request) {
         const player = playerResult.rows[0];
         const team = teamResult.rows[0];
         if (!player || !team) throw new Error('Player or team not found');
-        if (action === 'markPlayerSold' && player.status !== 'AVAILABLE') throw new Error('Player is no longer available');
+        if ((action === 'markPlayerSold' || action === 'assignGoalkeeper') && player.status !== 'AVAILABLE' && player.status !== 'UNSOLD') throw new Error('Player is no longer available');
         const squadResult = await client.query('SELECT COUNT(*)::int AS count FROM players WHERE team_id = $1', [teamId]);
         if (squadResult.rows[0].count >= team.max_squad_size) throw new Error('Team squad limit reached');
         const spentResult = await client.query('SELECT COALESCE(SUM(price), 0)::int AS spent FROM auction_sales WHERE team_id = $1', [teamId]);
         if (spentResult.rows[0].spent + Number(price) > team.starting_purse) throw new Error('Team budget exceeded');
-        await client.query("UPDATE players SET status = $1, is_icon = $2, sold_price = $3, team_id = $4, updated_at = now() WHERE id = $5", [action === 'assignIconPlayer' ? 'ICON' : 'SOLD', action === 'assignIconPlayer', price, teamId, playerId]);
+        const isIcon = action === 'assignIconPlayer';
+        await client.query("UPDATE players SET status = $1, is_icon = $2, sold_price = $3, team_id = $4, updated_at = now() WHERE id = $5", [isIcon ? 'ICON' : 'SOLD', isIcon, price, teamId, playerId]);
+        if (isIcon) {
+          await client.query('UPDATE teams SET icon_player_id = $1, updated_at = now() WHERE id = $2', [playerId, teamId]);
+          await client.query('UPDATE teams SET icon_player_id = NULL, updated_at = now() WHERE icon_player_id = $1 AND id <> $2', [playerId, teamId]);
+        }
         await client.query('INSERT INTO auction_sales (player_id, team_id, price, is_icon_sale) VALUES ($1, $2, $3, $4) ON CONFLICT (player_id) DO UPDATE SET team_id = EXCLUDED.team_id, price = EXCLUDED.price, is_icon_sale = EXCLUDED.is_icon_sale', [playerId, teamId, price, action === 'assignIconPlayer']);
         await client.query('COMMIT');
         return NextResponse.json({ ok: true });
@@ -36,6 +41,13 @@ export async function POST(request: Request) {
 
     if (action === 'markPlayerUnsold') {
       await query("UPDATE players SET status = 'UNSOLD', team_id = NULL, sold_price = NULL, updated_at = now() WHERE id = $1", [payload.playerId]);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === 'unassignIconPlayer') {
+      await query("UPDATE players SET status = 'ICON', team_id = NULL, sold_price = NULL, updated_at = now() WHERE id = $1 AND is_icon = true", [payload.playerId]);
+      await query('UPDATE teams SET icon_player_id = NULL, updated_at = now() WHERE icon_player_id = $1', [payload.playerId]);
+      await query('DELETE FROM auction_sales WHERE player_id = $1', [payload.playerId]);
       return NextResponse.json({ ok: true });
     }
 
@@ -64,10 +76,17 @@ export async function POST(request: Request) {
         INSERT INTO teams (id, name, short_name, logo_url, color, starting_purse, max_squad_size, owner_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (id) DO UPDATE SET name=$2, short_name=$3, logo_url=$4, color=$5,
-          starting_purse=$6, max_squad_size=$7, owner_id=$8, updated_at=now()
-      `, [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, t.maxSquadSize ?? 10, ownerId]);
+          starting_purse=$6, max_squad_size=$7, owner_id=$8, icon_player_id=$9, updated_at=now()
+        `, [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, 9, ownerId, t.iconPlayerId ?? null]);
       return NextResponse.json({ ok: true });
     }
+
+      if (action === 'addTeam') {
+        const t = payload.team;
+        const owner = await query<{ id: string }>('INSERT INTO team_owners (name, image_url) VALUES ($1, $2) RETURNING id', [t.owner || 'Not configured', t.ownerPhotoUrl ?? null]);
+        await query('INSERT INTO teams (id, name, short_name, logo_url, color, starting_purse, max_squad_size, owner_id) VALUES ($1,$2,$3,$4,$5,$6,9,$7)', [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, owner.rows[0].id]);
+        return NextResponse.json({ ok: true });
+      }
 
     if (action === 'updateFixtureScore') {
       const f = payload.fixture;

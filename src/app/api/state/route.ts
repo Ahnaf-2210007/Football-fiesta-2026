@@ -8,6 +8,7 @@ const EMPTY_TEAMS = INITIAL_TEAMS.map((team) => ({
   owner: '',
   ownerPhotoUrl: undefined,
   logoUrl: undefined,
+  maxSquadSize: 9,
   group: undefined
 }));
 import { query } from '@/lib/db';
@@ -22,7 +23,8 @@ export async function GET() {
            owners.image_url AS "ownerPhotoUrl", logo_url AS "logoUrl", color,
                starting_purse AS "startingPurse",
                COALESCE((SELECT SUM(price) FROM auction_sales s WHERE s.team_id = teams.id), 0)::int AS "spentPurse",
-               max_squad_size AS "maxSquadSize", group_name AS "group", owner_id AS "ownerId"
+               max_squad_size AS "maxSquadSize", group_name AS "group", owner_id AS "ownerId",
+               icon_player_id AS "iconPlayerId"
          FROM teams LEFT JOIN team_owners owners ON owners.id = teams.owner_id
          ORDER BY teams.created_at, teams.id
       `),
