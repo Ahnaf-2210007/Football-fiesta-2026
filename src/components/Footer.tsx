@@ -27,7 +27,7 @@ export const Footer: React.FC = () => {
         <div className="max-w-7xl mx-auto pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-400 gap-4">
           <p>© 2026 ECE Football Fiesta. All Rights Reserved.</p>
           <p className="flex items-center gap-1">
-            Crafted with <Heart size={13} className="text-fiery-red fill-fiery-red" /> for ECE Department
+            Crafted with <Heart size={13} className="text-fiery-red fill-fiery-red" /> for ECE Department by Shadman Aziz
           </p>
         </div>
       </div>

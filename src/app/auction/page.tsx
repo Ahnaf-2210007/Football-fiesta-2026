@@ -295,7 +295,7 @@ export default function AuctionStagePage() {
             <Info className="w-6 h-6 text-light-cyan shrink-0 mt-1" />
             <div className="space-y-1 text-xs text-gray-300">
               <h4 className="font-bebas text-lg text-light-cyan">Auction Bidding Rules Overview</h4>
-              <p>Base price: <strong className="text-primary-yellow">50 TK</strong> | Increments: <strong className="text-white">+10 TK</strong> (&lt;100 TK), <strong className="text-white">+20 TK</strong> (100–200 TK), <strong className="text-white">+50 TK</strong> (&gt;200 TK).</p>
+              <p>Base price: <strong className="text-primary-yellow">50 TK</strong> | Increments: <strong className="text-white">+10 TK</strong> (&lt;100 TK), <strong className="text-white">+20 TK</strong> (100–200 TK), <strong className="text-white">Hidden Bid</strong> (&gt;200 TK).</p>
             </div>
           </div>
         </div>
@@ -334,7 +334,7 @@ export default function AuctionStagePage() {
                         </div>
                       )}
                       <span className="font-bebas text-lg text-teal">
-                        {teamPlayers.length}/10 Players
+                        {teamPlayers.length}/9 Players
                       </span>
                     </div>
                   </div>
