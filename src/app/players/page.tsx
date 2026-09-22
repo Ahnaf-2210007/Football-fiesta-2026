@@ -36,7 +36,7 @@ const normalizeImageUrl = (value: unknown) => {
 };
 
 export default function PlayersDirectoryPage() {
-  const { isAdmin, players, addPlayer, deletePlayer, bulkImportPlayers } = useApp();
+  const { isAdmin, players, addPlayer, updatePlayer, deletePlayer, bulkImportPlayers } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [positionFilter, setPositionFilter] = useState<string>('ALL');
@@ -390,8 +390,7 @@ export default function PlayersDirectoryPage() {
             <form onSubmit={(e) => {
               e.preventDefault();
               if (!editingPlayer) return;
-              const { updatePlayer } = useApp();
-              useApp().updatePlayer({
+              updatePlayer({
                 ...editingPlayer,
                 photoUrl: normalizeImageUrl(editingPlayer.photoUrl)
               });
@@ -427,11 +426,12 @@ export default function PlayersDirectoryPage() {
                     onChange={(e) => setEditingPlayer({ ...editingPlayer, series: e.target.value })}
                     className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-teal focus:outline-none"
                   >
-                    <option value="19 Series">19 Series</option>
-                    <option value="20 Series">20 Series</option>
                     <option value="21 Series">21 Series</option>
                     <option value="22 Series">22 Series</option>
                     <option value="23 Series">23 Series</option>
+                    <option value="24 Series">24 Series</option>
+                    <option value="25 Series">25 Series</option>
+                    <option value="Alumni">Alumni</option>
                   </select>
                 </div>
               </div>

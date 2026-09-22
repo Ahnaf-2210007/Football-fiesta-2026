@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     if (action === 'updatePlayer') {
       const p = payload.player;
-      await query('UPDATE players SET name=$2, roll=$3, series=$4, position=$5, image_url=$6, rating=$7, assists=$8, updated_at=now() WHERE id=$1', [p.id, p.name, p.roll, p.series, p.position, p.photoUrl ?? null, p.rating ?? null, p.assists ?? 0]);
+      await query('UPDATE players SET name=$2, roll=$3, series=$4, position=$5, is_icon=$6, status=$7, image_url=$8, rating=$9, assists=$10, updated_at=now() WHERE id=$1', [p.id, p.name, p.roll, p.series, p.position, Boolean(p.isIcon), p.status, p.photoUrl ?? null, p.rating ?? null, p.assists ?? 0]);
       return NextResponse.json({ ok: true });
     }
 

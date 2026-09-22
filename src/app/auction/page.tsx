@@ -51,7 +51,7 @@ export default function AuctionStagePage() {
     }
   };
 
-  const unsoldPlayers = players.filter(p => !p.isIcon && p.status === 'AVAILABLE');
+  const unsoldPlayers = players.filter(p => !p.isIcon && (p.status === 'AVAILABLE' || p.status === 'UNSOLD') && !p.teamId);
   const soldPlayersCount = players.filter(p => p.status === 'SOLD').length;
 
   const handleDrawNext = () => {
@@ -219,7 +219,7 @@ export default function AuctionStagePage() {
                             const squadCount = players.filter(p => p.teamId === t.id).length;
                             return (
                               <option key={t.id} value={t.id}>
-                                {t.name} ({squadCount}/10 Players)
+                                {t.name} ({squadCount}/9 Players)
                               </option>
                             );
                           })}

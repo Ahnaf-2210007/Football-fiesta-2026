@@ -295,14 +295,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Bidding & Live Auction
+  const getAuctionCandidates = (excludedPlayerId?: string) => players.filter(p =>
+    !p.isIcon &&
+    (p.status === 'AVAILABLE' || p.status === 'UNSOLD') &&
+    p.id !== excludedPlayerId &&
+    !p.teamId
+  );
+
   const drawNextRandomPlayer = (): Player | null => {
-    const available = players.filter(p => !p.isIcon && p.status === 'AVAILABLE');
-    if (available.length === 0) {
+    const candidates = getAuctionCandidates();
+    if (candidates.length === 0) {
       setCurrentStagePlayer(null);
       return null;
     }
-    const randomIndex = Math.floor(Math.random() * available.length);
-    const chosen = available[randomIndex];
+    const chosen = candidates[Math.floor(Math.random() * candidates.length)];
     setCurrentStagePlayer(chosen);
     return chosen;
   };
@@ -339,9 +345,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Auto advance to next player
     setTimeout(() => {
-      const remainingAvailable = players.filter(p => p.id !== playerId && !p.isIcon && p.status === 'AVAILABLE');
-      if (remainingAvailable.length > 0) {
-        const next = remainingAvailable[Math.floor(Math.random() * remainingAvailable.length)];
+      const remainingCandidates = getAuctionCandidates(playerId);
+      if (remainingCandidates.length > 0) {
+        const next = remainingCandidates[Math.floor(Math.random() * remainingCandidates.length)];
         setCurrentStagePlayer(next);
       } else {
         setCurrentStagePlayer(null);
@@ -360,9 +366,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Auto advance to next player
     setTimeout(() => {
-      const remainingAvailable = players.filter(p => p.id !== playerId && !p.isIcon && p.status === 'AVAILABLE');
-      if (remainingAvailable.length > 0) {
-        const next = remainingAvailable[Math.floor(Math.random() * remainingAvailable.length)];
+      const remainingCandidates = getAuctionCandidates(playerId);
+      if (remainingCandidates.length > 0) {
+        const next = remainingCandidates[Math.floor(Math.random() * remainingCandidates.length)];
         setCurrentStagePlayer(next);
       } else {
         setCurrentStagePlayer(null);
