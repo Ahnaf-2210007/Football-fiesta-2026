@@ -8,9 +8,12 @@ CREATE TABLE IF NOT EXISTS team_owners (
   name TEXT NOT NULL,
   email TEXT,
   phone TEXT,
+  image_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE team_owners ADD COLUMN IF NOT EXISTS image_url TEXT;
 
 CREATE TABLE IF NOT EXISTS teams (
   id TEXT PRIMARY KEY,
@@ -55,6 +58,35 @@ CREATE TABLE IF NOT EXISTS auction_sales (
   UNIQUE (player_id)
 );
 
+CREATE TABLE IF NOT EXISTS tournament_rules (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('BUDGET', 'SQUAD', 'BIDDING', 'MATCH', 'GENERAL')),
+  is_default BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS fixtures (
+  id TEXT PRIMARY KEY,
+  match_no INTEGER NOT NULL,
+  group_name TEXT CHECK (group_name IN ('A', 'B', 'SEMIFINAL', 'FINAL')),
+  team1_id TEXT NOT NULL,
+  team1_name TEXT NOT NULL,
+  team2_id TEXT NOT NULL,
+  team2_name TEXT NOT NULL,
+  team1_score INTEGER,
+  team2_score INTEGER,
+  team1_pens INTEGER,
+  team2_pens INTEGER,
+  is_completed BOOLEAN NOT NULL DEFAULT false,
+  stage_name TEXT NOT NULL,
+  time_slot TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE INDEX IF NOT EXISTS players_team_id_idx ON players(team_id);
 CREATE INDEX IF NOT EXISTS players_status_idx ON players(status);
 CREATE INDEX IF NOT EXISTS auction_sales_team_id_idx ON auction_sales(team_id);
@@ -80,4 +112,9 @@ FOR EACH ROW EXECUTE FUNCTION set_updated_at();
 DROP TRIGGER IF EXISTS players_updated_at ON players;
 CREATE TRIGGER players_updated_at
 BEFORE UPDATE ON players
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS tournament_rules_updated_at ON tournament_rules;
+CREATE TRIGGER tournament_rules_updated_at
+BEFORE UPDATE ON tournament_rules
 FOR EACH ROW EXECUTE FUNCTION set_updated_at();

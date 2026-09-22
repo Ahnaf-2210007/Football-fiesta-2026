@@ -63,28 +63,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [customAwards, setCustomAwards] = useState<Record<string, { recipientName?: string; recipientTeam?: string; detail?: string }>>({});
 
-  // Load from local storage on mount
+  // Load local state first, then refresh shared data from PostgreSQL.
   useEffect(() => {
-    try {
-      const storedAdmin = localStorage.getItem('ECE_ADMIN_ACTIVE');
-      if (storedAdmin === 'true') {
-        setIsAdmin(true);
-      }
+    const loadState = async () => {
+      try {
+        const storedAdmin = localStorage.getItem('ECE_ADMIN_ACTIVE');
+        if (storedAdmin === 'true') {
+          setIsAdmin(true);
+        }
 
-      const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedData) {
-        const parsed = JSON.parse(storedData);
-        if (parsed.teams) setTeams(parsed.teams);
-        if (parsed.players) setPlayers(parsed.players);
-        if (parsed.rules) setRules(parsed.rules);
-        if (parsed.fixtures) setFixtures(parsed.fixtures);
-        if (parsed.standingsOverrides) setStandingsOverrides(parsed.standingsOverrides);
-        if (parsed.currentStagePlayer) setCurrentStagePlayer(parsed.currentStagePlayer);
-        if (parsed.customAwards) setCustomAwards(parsed.customAwards);
+        const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (storedData) {
+          const parsed = JSON.parse(storedData);
+          if (parsed.teams) setTeams(parsed.teams);
+          if (parsed.players) setPlayers(parsed.players);
+          if (parsed.rules) setRules(parsed.rules);
+          if (parsed.fixtures) setFixtures(parsed.fixtures);
+          if (parsed.standingsOverrides) setStandingsOverrides(parsed.standingsOverrides);
+          if (parsed.currentStagePlayer) setCurrentStagePlayer(parsed.currentStagePlayer);
+          if (parsed.customAwards) setCustomAwards(parsed.customAwards);
+        }
+
+        const response = await fetch('/api/state', { cache: 'no-store' });
+        if (response.ok) {
+          const databaseState = await response.json();
+          if (databaseState.teams?.length) setTeams(databaseState.teams);
+          if (databaseState.players?.length) setPlayers(databaseState.players);
+          if (databaseState.rules?.length) setRules(databaseState.rules);
+          if (databaseState.fixtures) setFixtures(databaseState.fixtures);
+        }
+      } catch (e) {
+        console.error('Failed to load application state', e);
       }
-    } catch (e) {
-      console.error('Failed to load state from LocalStorage', e);
-    }
+    };
+
+    void loadState();
   }, []);
 
   // Save state changes to local storage
@@ -135,11 +148,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem('ECE_ADMIN_ACTIVE');
   };
 
+  const persistMutation = (action: string, data: Record<string, unknown>) => {
+    void fetch('/api/mutations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, ...data })
+    }).then(async response => {
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.message || `Mutation failed: ${action}`);
+      }
+    }).catch(error => console.error(error));
+  };
+
   // Team updates
   const updateTeam = (updatedTeam: Team) => {
     setTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
     // Update player teamName references
     setPlayers(prev => prev.map(p => p.teamId === updatedTeam.id ? { ...p, teamName: updatedTeam.name } : p));
+    persistMutation('updateTeam', { team: updatedTeam as unknown as Record<string, unknown> });
   };
 
   // Player updates
@@ -151,10 +178,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       goalsScored: 0
     };
     setPlayers(prev => [...prev, created]);
+    void fetch('/api/players', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(created) });
   };
 
   const updatePlayer = (updatedP: Player) => {
     setPlayers(prev => prev.map(p => p.id === updatedP.id ? updatedP : p));
+    persistMutation('updatePlayer', { player: updatedP as unknown as Record<string, unknown> });
   };
 
   const deletePlayer = (playerId: string) => {
@@ -162,6 +191,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (currentStagePlayer?.id === playerId) {
       setCurrentStagePlayer(null);
     }
+    void fetch(`/api/players/${playerId}`, { method: 'DELETE' });
   };
 
   const bulkImportPlayers = (newPlayers: Player[], replace: boolean) => {
@@ -172,6 +202,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } else {
       setPlayers(prev => [...prev, ...newPlayers]);
     }
+    void fetch('/api/players/import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ players: newPlayers, replace })
+    });
   };
 
   const incrementPlayerGoals = (playerId: string, delta: number) => {
@@ -182,6 +217,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return p;
     }));
+    persistMutation('incrementPlayerGoals', { playerId, delta });
   };
 
   // Icon Assignment
@@ -205,6 +241,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Recalculate team spent budget
     recalculateTeamSpent(teamId, price);
+    persistMutation('assignIconPlayer', { playerId, teamId, price });
   };
 
   // Bidding & Live Auction
@@ -248,6 +285,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return t;
     }));
+    persistMutation('markPlayerSold', { playerId, teamId, price });
 
     // Auto advance to next player
     setTimeout(() => {
@@ -268,6 +306,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return p;
     }));
+    persistMutation('markPlayerUnsold', { playerId });
 
     // Auto advance to next player
     setTimeout(() => {
@@ -324,6 +363,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ];
 
     setFixtures(newFixtures);
+    persistMutation('performGroupDraw', {});
   };
 
   const updateFixtureScore = (fixtureId: string, team1Score?: number, team2Score?: number, team1Pens?: number, team2Pens?: number) => {
@@ -341,6 +381,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return f;
     }));
+    const fixture = fixtures.find(item => item.id === fixtureId);
+    if (fixture) persistMutation('updateFixtureScore', { fixture: { ...fixture, team1Score, team2Score, team1Pens, team2Pens } as unknown as Record<string, unknown> });
   };
 
   const updateStandingOverride = (teamId: string, overrideData: Partial<GroupStanding>) => {
@@ -361,14 +403,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: 'rule-' + Date.now()
     };
     setRules(prev => [...prev, createdRule]);
+    persistMutation('addRule', { rule: createdRule as unknown as Record<string, unknown> });
   };
 
   const updateRule = (updatedRule: TournamentRule) => {
     setRules(prev => prev.map(r => r.id === updatedRule.id ? updatedRule : r));
+    persistMutation('updateRule', { rule: updatedRule as unknown as Record<string, unknown> });
   };
 
   const deleteRule = (ruleId: string) => {
     setRules(prev => prev.filter(r => r.id !== ruleId));
+    persistMutation('deleteRule', { ruleId });
   };
 
   const resetRulesToDefault = () => {

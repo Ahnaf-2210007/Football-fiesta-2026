@@ -106,20 +106,27 @@ export default function PlayersDirectoryPage() {
         const ws = wb.Sheets[wsname];
         const data = XLSX.utils.sheet_to_json<any>(ws);
 
-        const imported: Player[] = data.map((row, idx) => ({
+        const imported: Player[] = data.map((row, idx) => {
+          const iconValue = row.IsIcon ?? row['Is Icon'] ?? row.Type ?? row.type ?? false;
+          const isIcon = iconValue === true || ['true', 'yes', 'icon', '1'].includes(String(iconValue).trim().toLowerCase());
+          const position = (row.Position || row.position || 'FORWARD').toUpperCase() as PlayerPosition;
+
+          return {
           id: 'imp-' + Date.now() + '-' + idx,
           name: row.Name || row.name || `Player ${idx + 1}`,
           roll: String(row.Roll || row.roll || `2003${idx + 10}`),
           series: row.Series || row.series || '21 Series',
-          position: (row.Position || row.position || 'FORWARD').toUpperCase() as PlayerPosition,
-          isIcon: false,
-          status: 'AVAILABLE' as PlayerStatus,
+          position,
+          isIcon,
+          status: isIcon ? 'ICON' as PlayerStatus : 'AVAILABLE' as PlayerStatus,
           goalsScored: 0,
+          rating: Number(row.Rating || row.rating) || undefined,
           photoUrl: normalizeImageUrl(
             row['Photo URL'] || row['Photo Url'] || row.photoUrl || row.Photo ||
             row.photo || row['Image URL'] || row['Image Url'] || row.imageUrl || row.Image || row.image
           )
-        }));
+          };
+        });
 
         if (imported.length > 0) {
           bulkImportPlayers(imported, importReplace);
