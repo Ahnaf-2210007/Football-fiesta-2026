@@ -119,14 +119,6 @@ export async function POST(request: Request) {
       }
     }
 
-    if (action === 'performGroupDraw') {
-      throw new Error('Tournament groups are locked');
-    }
-
-    if (action === 'restoreCurrentShuffle') {
-      throw new Error('Tournament groups are locked');
-    }
-
     if (action === 'updateStandingOverride') {
       await query(`
         INSERT INTO tournament_state (id, standings_overrides)

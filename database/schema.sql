@@ -102,6 +102,35 @@ CREATE TABLE IF NOT EXISTS tournament_state (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Lock the current tournament draw shown in the production tournament view.
+UPDATE teams SET group_name = 'A', updated_at = now()
+WHERE id IN ('team-1790068546862', 'team-1790068861208', 'team-1790068651996');
+UPDATE teams SET group_name = 'B', updated_at = now()
+WHERE id IN ('team-1790069011168', 'team-1790069203133', 'team-1790069104216');
+
+DELETE FROM fixtures WHERE id IN ('f-7', 'f-8', 'f-9');
+
+INSERT INTO fixtures (id, match_no, group_name, team1_id, team1_name, team2_id, team2_name, stage_name)
+VALUES
+  ('f-1', 1, 'A', 'team-1790068651996', 'Imperial FC', 'team-1790068546862', 'Highline FC', 'Group A - Match 1'),
+  ('f-2', 2, 'A', 'team-1790068546862', 'Highline FC', 'team-1790068861208', 'Aie Goal Dimu Boys', 'Group A - Match 2'),
+  ('f-3', 3, 'A', 'team-1790068861208', 'Aie Goal Dimu Boys', 'team-1790068651996', 'Imperial FC', 'Group A - Match 3'),
+  ('f-4', 4, 'B', 'team-1790069104216', 'Pressure... What Pressure FC', 'team-1790069011168', 'HATTIMATIM TIM - তারা মাঠে পাড়ে ডিম', 'Group B - Match 1'),
+  ('f-5', 5, 'B', 'team-1790069011168', 'HATTIMATIM TIM - তারা মাঠে পাড়ে ডিম', 'team-1790069203133', 'মুরগির খামার ছেড়ে Mourinho Speaking', 'Group B - Match 2'),
+  ('f-6', 6, 'B', 'team-1790069203133', 'মুরগির খামার ছেড়ে Mourinho Speaking', 'team-1790069104216', 'Pressure... What Pressure FC', 'Group B - Match 3'),
+  ('f-sf1', 7, 'SEMIFINAL', 'team-1790068546862', 'Highline FC', 'team-1790069104216', 'Pressure... What Pressure FC', 'Semifinal 1'),
+  ('f-sf2', 8, 'SEMIFINAL', 'team-1790069011168', 'HATTIMATIM TIM - তারা মাঠে পাড়ে ডিম', 'team-1790068651996', 'Imperial FC', 'Semifinal 2'),
+  ('f-final', 9, 'FINAL', 'tbd-sf1', 'Winner SF1', 'tbd-sf2', 'Winner SF2', 'Grand Final')
+ON CONFLICT (id) DO UPDATE SET
+  match_no = EXCLUDED.match_no,
+  group_name = EXCLUDED.group_name,
+  team1_id = EXCLUDED.team1_id,
+  team1_name = EXCLUDED.team1_name,
+  team2_id = EXCLUDED.team2_id,
+  team2_name = EXCLUDED.team2_name,
+  stage_name = EXCLUDED.stage_name,
+  updated_at = now();
+
 CREATE INDEX IF NOT EXISTS players_team_id_idx ON players(team_id);
 CREATE INDEX IF NOT EXISTS players_status_idx ON players(status);
 CREATE INDEX IF NOT EXISTS auction_sales_team_id_idx ON auction_sales(team_id);
