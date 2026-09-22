@@ -14,7 +14,7 @@ const EMPTY_TEAMS: Team[] = INITIAL_TEAMS.map((team, index) => ({
   color: team.color,
   startingPurse: 1500,
   spentPurse: 0,
-  maxSquadSize: 9,
+  maxSquadSize: 11,
   group: undefined
 }));
 

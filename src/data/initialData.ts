@@ -11,7 +11,7 @@ export const INITIAL_TEAMS: Team[] = [
     color: '#FFD600', // Yellow
     startingPurse: 1500,
     spentPurse: 0,
-    maxSquadSize: 10,
+    maxSquadSize: 11,
     group: 'A'
   },
   {
@@ -24,7 +24,7 @@ export const INITIAL_TEAMS: Team[] = [
     color: '#00B3A4', // Teal
     startingPurse: 1500,
     spentPurse: 0,
-    maxSquadSize: 10,
+    maxSquadSize: 11,
     group: 'A'
   },
   {
@@ -37,7 +37,7 @@ export const INITIAL_TEAMS: Team[] = [
     color: '#FF6B00', // Vibrant Orange
     startingPurse: 1500,
     spentPurse: 0,
-    maxSquadSize: 10,
+    maxSquadSize: 11,
     group: 'A'
   },
   {
@@ -50,7 +50,7 @@ export const INITIAL_TEAMS: Team[] = [
     color: '#4EE4FF', // Light Cyan
     startingPurse: 1500,
     spentPurse: 0,
-    maxSquadSize: 10,
+    maxSquadSize: 11,
     group: 'B'
   },
   {
@@ -63,7 +63,7 @@ export const INITIAL_TEAMS: Team[] = [
     color: '#E63946', // Fiery Red
     startingPurse: 1500,
     spentPurse: 0,
-    maxSquadSize: 10,
+    maxSquadSize: 11,
     group: 'B'
   },
   {
@@ -76,7 +76,7 @@ export const INITIAL_TEAMS: Team[] = [
     color: '#0B2D3A', // Deep Blue
     startingPurse: 1500,
     spentPurse: 0,
-    maxSquadSize: 10,
+    maxSquadSize: 11,
     group: 'B'
   }
 ];
@@ -200,7 +200,7 @@ export const INITIAL_RULES: TournamentRule[] = [
   {
     id: 'rule-2',
     title: 'Squad Size Requirement',
-    description: 'Each squad must consist of exactly 10 players: 1 designated Icon Player and 9 Players acquired from the live auction pool.',
+    description: 'Each squad must consist of exactly 11 players: 1 designated Icon Player and 10 Players acquired from the live auction pool.',
     category: 'SQUAD',
     isDefault: true
   },
@@ -228,7 +228,7 @@ export const INITIAL_RULES: TournamentRule[] = [
   {
     id: 'rule-6',
     title: 'Forced Resell Policy',
-    description: 'If a team manager exceeds their total 1,500 TK purse or fails to complete a 10-player roster within budget, their highest-value acquired player is automatically returned to the re-auction pool.',
+    description: 'If a team manager exceeds their total 1,500 TK purse or fails to complete an 11-player roster within budget, their highest-value acquired player is automatically returned to the re-auction pool.',
     category: 'BUDGET',
     isDefault: true
   },

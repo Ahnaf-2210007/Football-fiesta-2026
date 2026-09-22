@@ -79,14 +79,14 @@ export async function POST(request: Request) {
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT (id) DO UPDATE SET name=$2, short_name=$3, logo_url=$4, color=$5,
           starting_purse=$6, max_squad_size=$7, owner_id=$8, icon_player_id=$9, updated_at=now()
-        `, [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, 9, ownerId, t.iconPlayerId ?? null]);
+        `, [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, 11, ownerId, t.iconPlayerId ?? null]);
       return NextResponse.json({ ok: true });
     }
 
       if (action === 'addTeam') {
         const t = payload.team;
         const owner = await query<{ id: string }>('INSERT INTO team_owners (name, image_url) VALUES ($1, $2) RETURNING id', [t.owner || 'Not configured', t.ownerPhotoUrl ?? null]);
-        await query('INSERT INTO teams (id, name, short_name, logo_url, color, starting_purse, max_squad_size, owner_id) VALUES ($1,$2,$3,$4,$5,$6,9,$7)', [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, owner.rows[0].id]);
+        await query('INSERT INTO teams (id, name, short_name, logo_url, color, starting_purse, max_squad_size, owner_id) VALUES ($1,$2,$3,$4,$5,$6,11,$7)', [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, owner.rows[0].id]);
         return NextResponse.json({ ok: true });
       }
 

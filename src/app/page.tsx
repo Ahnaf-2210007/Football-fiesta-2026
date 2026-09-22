@@ -104,8 +104,8 @@ export default function HomePage() {
 
           <div className="glass-panel p-6 rounded-2xl border-l-4 border-l-light-cyan text-center space-y-1 hover:scale-105 transition-transform">
             <Crown className="w-8 h-8 text-light-cyan mx-auto mb-2" />
-            <h4 className="font-bebas text-4xl text-white">10 SQUAD SIZE</h4>
-            <p className="text-xs text-gray-400 font-semibold uppercase">1 Icon + 9 Auctioned</p>
+            <h4 className="font-bebas text-4xl text-white">11 SQUAD SIZE</h4>
+            <p className="text-xs text-gray-400 font-semibold uppercase">1 Icon + 10 Auctioned</p>
           </div>
 
         </div>
@@ -182,7 +182,7 @@ export default function HomePage() {
 
                 <div className="bg-charcoal/80 p-3 rounded-xl flex items-center justify-between text-xs">
                   <span className="text-gray-400 uppercase font-semibold text-[10px]">Squad Roster Count</span>
-                  <span className="font-bebas text-xl text-light-cyan">{teamSquadCount}/10 Players</span>
+                  <span className="font-bebas text-xl text-light-cyan">{teamSquadCount}/11 Players</span>
                 </div>
               </div>
             );

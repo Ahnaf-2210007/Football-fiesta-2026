@@ -18,7 +18,7 @@ export default function TeamsPage() {
   const handleAddTeam = (event: React.FormEvent) => {
     event.preventDefault();
     if (!name.trim() || !shortName.trim() || !owner.trim()) return;
-    addTeam({ id: `team-${Date.now()}`, name: name.trim(), shortName: shortName.trim().toUpperCase(), owner: owner.trim(), ownerPhotoUrl: ownerPhotoUrl.trim() || undefined, logoUrl: logoUrl.trim() || undefined, color, startingPurse: 1500, spentPurse: 0, maxSquadSize: 9 });
+    addTeam({ id: `team-${Date.now()}`, name: name.trim(), shortName: shortName.trim().toUpperCase(), owner: owner.trim(), ownerPhotoUrl: ownerPhotoUrl.trim() || undefined, logoUrl: logoUrl.trim() || undefined, color, startingPurse: 1500, spentPurse: 0, maxSquadSize: 11 });
     setName(''); setShortName(''); setOwner(''); setOwnerPhotoUrl(''); setLogoUrl(''); setColor('#00B3A4'); setIsAddOpen(false);
   };
 

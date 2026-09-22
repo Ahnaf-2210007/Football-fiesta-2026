@@ -8,7 +8,7 @@ const EMPTY_TEAMS = INITIAL_TEAMS.map((team) => ({
   owner: '',
   ownerPhotoUrl: undefined,
   logoUrl: undefined,
-  maxSquadSize: 9,
+  maxSquadSize: 11,
   group: undefined
 }));
 import { query } from '@/lib/db';

@@ -187,7 +187,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
         {/* Auctioned Roster Section */}
         <div>
           <h4 className="text-xs font-semibold text-light-cyan uppercase tracking-wider mb-2">
-            Auctioned Squad ({auctionPlayers.length}/8)
+            Auctioned Squad ({auctionPlayers.length}/10)
           </h4>
 
           {auctionPlayers.length > 0 ? (

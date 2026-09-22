@@ -219,7 +219,7 @@ export default function AuctionStagePage() {
                             const squadCount = players.filter(p => p.teamId === t.id).length;
                             return (
                               <option key={t.id} value={t.id}>
-                                {t.name} ({squadCount}/9 Players)
+                                {t.name} ({squadCount}/11 Players)
                               </option>
                             );
                           })}
@@ -334,7 +334,7 @@ export default function AuctionStagePage() {
                         </div>
                       )}
                       <span className="font-bebas text-lg text-teal">
-                        {teamPlayers.length}/9 Players
+                        {teamPlayers.length}/11 Players
                       </span>
                     </div>
                   </div>
