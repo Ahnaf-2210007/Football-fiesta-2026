@@ -117,14 +117,16 @@ export default function PlayersDirectoryPage() {
           id: 'imp-' + Date.now() + '-' + idx,
           name: row.Name || row.name || `Player ${idx + 1}`,
           roll: String(row.Roll || row.roll || `2003${idx + 10}`),
-          series: row.Series || row.series || '21 Series',
+          series: String(row.Series || row.series || '21 Series').match(/^\d+$/)
+            ? `${row.Series || row.series} Series`
+            : String(row.Series || row.series || '21 Series'),
           position,
           isIcon,
           status: isIcon ? 'ICON' as PlayerStatus : 'AVAILABLE' as PlayerStatus,
           goalsScored: 0,
           rating: Number(row.Rating || row.rating) || undefined,
           photoUrl: normalizeImageUrl(
-            row['Photo URL'] || row['Photo Url'] || row.photoUrl || row.Photo ||
+            row['Photo URL'] || row['Photo Url'] || row.Picture || row.picture || row.photoUrl || row.Photo ||
             row.photo || row['Image URL'] || row['Image Url'] || row.imageUrl || row.Image || row.image
           )
           };
