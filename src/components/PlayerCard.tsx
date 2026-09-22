@@ -54,7 +54,7 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onSelect, showTe
   return (
     <div
       onClick={() => onSelect && onSelect(player)}
-      className={`glass-panel rounded-2xl p-5 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary-yellow/50 group ${
+      className={`glass-panel rounded-2xl p-6 min-h-[190px] relative overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:border-primary-yellow/50 group ${
         onSelect ? 'cursor-pointer' : ''
       } ${player.isIcon ? 'border-primary-yellow/40 shadow-glow-yellow' : ''}`}
     >
@@ -63,9 +63,9 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onSelect, showTe
         <Shield size={120} />
       </div>
 
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-charcoal border border-gray-700 overflow-hidden flex items-center justify-center shrink-0">
+      <div className="flex items-start justify-between gap-4 mb-5">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="w-16 h-16 rounded-2xl bg-charcoal border-2 border-gray-700 overflow-hidden flex items-center justify-center shrink-0 shadow-md">
             {player.photoUrl ? (
               <img 
                 src={normalizeImageUrl(player.photoUrl)} 
@@ -74,11 +74,11 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, onSelect, showTe
                 onError={(e) => handleImageError(e, player.photoUrl)}
               />
             ) : (
-              <User size={24} className="text-gray-400" />
+              <User size={30} className="text-gray-400" />
             )}
           </div>
           <div>
-            <h4 className="font-bebas text-2xl text-white tracking-wide group-hover:text-primary-yellow transition-colors">
+            <h4 className="font-bebas text-3xl text-white tracking-wide leading-none group-hover:text-primary-yellow transition-colors">
               {player.name}
             </h4>
             <p className="text-xs text-gray-400 font-montserrat">

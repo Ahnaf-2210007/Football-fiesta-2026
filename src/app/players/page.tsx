@@ -451,6 +451,20 @@ export default function PlayersDirectoryPage() {
               </div>
 
               <div>
+                <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">Player Status</label>
+                <select
+                  value={editingPlayer.status}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, status: e.target.value as PlayerStatus })}
+                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-xs text-white focus:border-teal focus:outline-none"
+                >
+                  <option value="AVAILABLE">AVAILABLE</option>
+                  <option value="UNSOLD">UNSOLD</option>
+                  <option value="SOLD">SOLD</option>
+                  <option value="ICON">ICON</option>
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-xs font-semibold text-gray-300 uppercase mb-1">
                   Photo / Image URL (Google Drive Link)
                 </label>
