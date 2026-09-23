@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Team, Player } from '../types';
 import { useApp } from '../context/AppContext';
-import { normalizeImageUrl, handleImageError } from '../utils/imageUtils';
+import { getGoogleDriveFileId, normalizeImageUrl, handleImageError } from '../utils/imageUtils';
 import { Shield, Users, Edit2, User, Crown, X, Share2, Download, Image as ImageIcon } from 'lucide-react';
 
 interface TeamCardProps {
@@ -45,12 +45,22 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const managerPhoto = normalizeImageUrl(team.ownerPhotoUrl);
   const logoUrl = normalizeImageUrl(team.logoUrl);
 
-  const loadCardImage = (url?: string) => new Promise<HTMLImageElement | null>((resolve) => {
-    if (!url) return resolve(null);
-    const image = new window.Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => resolve(null);
-    image.src = url.startsWith('/') ? url : `/api/image?url=${encodeURIComponent(url)}`;
+  const loadCardImage = (...urls: Array<string | undefined>) => new Promise<HTMLImageElement | null>((resolve) => {
+    const candidates = urls.flatMap(url => {
+      if (!url) return [];
+      const fileId = getGoogleDriveFileId(url);
+      return [url, fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600` : undefined]
+        .filter((candidate): candidate is string => Boolean(candidate));
+    });
+    const tryCandidate = (index: number) => {
+      const url = candidates[index];
+      if (!url) return resolve(null);
+      const image = new window.Image();
+      image.onload = () => resolve(image);
+      image.onerror = () => tryCandidate(index + 1);
+      image.src = url.startsWith('/') ? url : `/api/image?url=${encodeURIComponent(url)}`;
+    };
+    tryCandidate(0);
   });
 
   const drawCoverImage = (context: CanvasRenderingContext2D, image: HTMLImageElement | null, x: number, y: number, width: number, height: number) => {
@@ -76,6 +86,26 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
     return value;
   };
 
+  const fitFont = (context: CanvasRenderingContext2D, text: string, maxWidth: number, family: string, weight: string, startingSize: number, minimumSize: number) => {
+    let size = startingSize;
+    do {
+      context.font = `${weight} ${size}px ${family}`;
+      if (context.measureText(text).width <= maxWidth || size === minimumSize) return context.font;
+      size -= 2;
+    } while (size >= minimumSize);
+    return context.font;
+  };
+
+  const drawPlaceholder = (context: CanvasRenderingContext2D, label: string, x: number, y: number, width: number, height: number, color: string) => {
+    context.fillStyle = color;
+    context.fillRect(x, y, width, height);
+    context.fillStyle = 'rgba(255,255,255,0.85)';
+    context.font = 'bold 32px Montserrat, sans-serif';
+    context.textAlign = 'center';
+    context.fillText(label.trim().slice(0, 2).toUpperCase() || '?', x + width / 2, y + height / 2 + 11);
+    context.textAlign = 'left';
+  };
+
   const handleShare = async () => {
     setIsGeneratingImage(true);
     try {
@@ -92,10 +122,10 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
       const [background, fiestaLogo, logo, manager, icon, ...playersImages] = await Promise.all([
         loadCardImage('/stadium_hero_bg.png'),
         loadCardImage('/H_logo.png'),
-        loadCardImage(logoUrl),
-        loadCardImage(managerPhoto),
-        loadCardImage(iconPlayer?.photoUrl ? normalizeImageUrl(iconPlayer.photoUrl) : undefined),
-        ...rosterPlayers.map(player => loadCardImage(player.photoUrl ? normalizeImageUrl(player.photoUrl) : undefined))
+        loadCardImage(team.logoUrl, logoUrl),
+        loadCardImage(team.ownerPhotoUrl, managerPhoto),
+        loadCardImage(iconPlayer?.photoUrl, iconPlayer?.photoUrl ? normalizeImageUrl(iconPlayer.photoUrl) : undefined),
+        ...rosterPlayers.map(player => loadCardImage(player.photoUrl, player.photoUrl ? normalizeImageUrl(player.photoUrl) : undefined))
       ]);
 
       context.fillStyle = '#061421';
@@ -104,7 +134,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
       context.globalAlpha = 0.28;
       drawCoverImage(context, background, 0, 0, canvas.width, canvas.height);
       context.restore();
-      context.fillStyle = 'rgba(3, 16, 31, 0.76)';
+      context.fillStyle = 'rgba(3, 16, 31, 0.58)';
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.strokeStyle = '#4ee4ff';
       context.lineWidth = 8;
@@ -134,8 +164,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
       context.stroke();
 
       context.fillStyle = '#ffffff';
-      context.font = 'bold 82px Bebas Neue, sans-serif';
-      context.fillText(fitCanvasText(context, displayName.toUpperCase(), 1120, 'bold 82px Bebas Neue, sans-serif'), 116, 210);
+      context.font = fitFont(context, displayName.toUpperCase(), 660, 'Bebas Neue, sans-serif', 'bold', 82, 34);
+      context.fillText(displayName.toUpperCase(), 116, 210);
       context.fillStyle = '#4ee4ff';
       context.font = 'bold 34px Montserrat, sans-serif';
       context.fillText(team.shortName, 120, 270);
@@ -150,15 +180,16 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
       context.beginPath();
       context.roundRect(180, 415, 540, 330, 28);
       context.clip();
-      drawContainImage(context, logo, 180, 415, 540, 330);
+      if (logo) drawContainImage(context, logo, 180, 415, 540, 330);
+      else drawPlaceholder(context, displayName, 180, 415, 540, 330, team.color);
       context.restore();
 
       context.fillStyle = '#9aa8b2';
       context.font = 'bold 22px Montserrat, sans-serif';
       context.fillText('TEAM MANAGER', 120, 875);
       context.fillStyle = '#ffffff';
-      context.font = 'bold 37px Montserrat, sans-serif';
-      context.fillText(fitCanvasText(context, displayOwner, 560, 'bold 37px Montserrat, sans-serif'), 120, 925);
+      context.font = fitFont(context, displayOwner, 560, 'Montserrat, sans-serif', 'bold', 37, 22);
+      context.fillText(displayOwner, 120, 925);
       if (manager) {
         context.save();
         context.beginPath();
@@ -166,6 +197,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
         context.clip();
         drawCoverImage(context, manager, 120, 980, 120, 120);
         context.restore();
+      } else {
+        drawPlaceholder(context, displayOwner, 120, 980, 120, 120, team.color);
       }
       context.fillStyle = '#4ee4ff';
       context.font = 'bold 42px Bebas Neue, sans-serif';
@@ -187,10 +220,12 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
         context.clip();
         drawCoverImage(context, icon, 930, 375, 130, 130);
         context.restore();
+      } else {
+        drawPlaceholder(context, iconPlayer?.name || 'Icon', 930, 375, 130, 130, '#806d00');
       }
       context.fillStyle = '#ffffff';
-      context.font = 'bold 36px Montserrat, sans-serif';
-      context.fillText(fitCanvasText(context, iconPlayer?.name || 'No icon player assigned', 990, 'bold 36px Montserrat, sans-serif'), 1100, 435);
+      context.font = fitFont(context, iconPlayer?.name || 'No icon player assigned', 990, 'Montserrat, sans-serif', 'bold', 36, 20);
+      context.fillText(iconPlayer?.name || 'No icon player assigned', 1100, 435);
       context.fillStyle = '#9aa8b2';
       context.font = '21px Montserrat, sans-serif';
       context.fillText(iconPlayer ? `${iconPlayer.roll}  •  ${iconPlayer.position}` : 'Assign an icon player', 1100, 475);
@@ -213,6 +248,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
           context.clip();
           drawCoverImage(context, playersImages[index], x + 12, y + 10, 70, 70);
           context.restore();
+        } else {
+          drawPlaceholder(context, player.name, x + 12, y + 10, 70, 70, team.color);
         }
         context.fillStyle = '#ffffff';
         context.font = 'bold 23px Montserrat, sans-serif';
