@@ -472,9 +472,9 @@ export default function TournamentPage() {
                 <div>
                   <h4 className="font-bebas text-2xl text-vibrant-orange">SEMIFINAL 1</h4>
                   <div className="text-sm space-y-2 mt-2">
-                    <p className="text-white font-semibold">{winnerA?.teamName || 'Winner Group A'}</p>
+                    <p className="text-white font-semibold">Group A Winner</p>
                     <p className="text-xs text-gray-400">vs</p>
-                    <p className="text-white font-semibold">{runnerUpB?.teamName || 'Runner-up Group B'}</p>
+                    <p className="text-white font-semibold">Group B Runner-up</p>
                   </div>
                 </div>
 
@@ -519,9 +519,9 @@ export default function TournamentPage() {
                 <div>
                   <h4 className="font-bebas text-2xl text-vibrant-orange">SEMIFINAL 2</h4>
                   <div className="text-sm space-y-2 mt-2">
-                    <p className="text-white font-semibold">{winnerB?.teamName || 'Winner Group B'}</p>
+                    <p className="text-white font-semibold">Group B Winner</p>
                     <p className="text-xs text-gray-400">vs</p>
-                    <p className="text-white font-semibold">{runnerUpA?.teamName || 'Runner-up Group A'}</p>
+                    <p className="text-white font-semibold">Group A Runner-up</p>
                   </div>
                 </div>
 
