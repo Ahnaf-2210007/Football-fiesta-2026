@@ -134,6 +134,11 @@ ON CONFLICT (id) DO UPDATE SET
   stage_name = EXCLUDED.stage_name,
   updated_at = now();
 
+-- Group B order: Match 1 is Mourinho Speaking vs Pressure, Match 3 is Pressure vs HATTIMATIM.
+UPDATE fixtures SET match_no = 40 WHERE id = 'f-4';
+UPDATE fixtures SET match_no = 4 WHERE id = 'f-6';
+UPDATE fixtures SET match_no = 6 WHERE id = 'f-4';
+
 CREATE INDEX IF NOT EXISTS players_team_id_idx ON players(team_id);
 CREATE INDEX IF NOT EXISTS players_status_idx ON players(status);
 CREATE INDEX IF NOT EXISTS auction_sales_team_id_idx ON auction_sales(team_id);

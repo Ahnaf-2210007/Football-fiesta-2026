@@ -397,7 +397,14 @@ export default function TournamentPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {fixtures.filter(f => f.group === 'A' || f.group === 'B').map((f) => (
+              {fixtures
+                .filter(f => f.group === 'A' || f.group === 'B')
+                .sort((first, second) => {
+                  if (first.group !== 'B' || second.group !== 'B') return first.matchNo - second.matchNo;
+                  const groupBOrder = ['f-6', 'f-5', 'f-4'];
+                  return groupBOrder.indexOf(first.id) - groupBOrder.indexOf(second.id);
+                })
+                .map((f) => (
                 <div key={f.id} className="glass-panel p-6 rounded-2xl space-y-4">
                   <div className="flex items-center justify-between text-xs border-b border-gray-800 pb-2">
                     <span className="font-bebas text-base text-primary-yellow">GROUP {f.group}</span>
@@ -453,7 +460,7 @@ export default function TournamentPage() {
                     </div>
                   )}
                 </div>
-              ))}
+                ))}
             </div>
           </section>
 
