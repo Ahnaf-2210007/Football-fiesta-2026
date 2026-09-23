@@ -48,10 +48,9 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const loadCardImage = (url?: string) => new Promise<HTMLImageElement | null>((resolve) => {
     if (!url) return resolve(null);
     const image = new window.Image();
-    image.crossOrigin = 'anonymous';
     image.onload = () => resolve(image);
     image.onerror = () => resolve(null);
-    image.src = url;
+    image.src = url.startsWith('/') ? url : `/api/image?url=${encodeURIComponent(url)}`;
   });
 
   const drawCoverImage = (context: CanvasRenderingContext2D, image: HTMLImageElement | null, x: number, y: number, width: number, height: number) => {
@@ -62,101 +61,165 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
     context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
   };
 
+  const drawContainImage = (context: CanvasRenderingContext2D, image: HTMLImageElement | null, x: number, y: number, width: number, height: number) => {
+    if (!image) return;
+    const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
+    const drawWidth = image.naturalWidth * scale;
+    const drawHeight = image.naturalHeight * scale;
+    context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
+  };
+
+  const fitCanvasText = (context: CanvasRenderingContext2D, text: string, maxWidth: number, font: string) => {
+    context.font = font;
+    let value = text;
+    while (value.length > 1 && context.measureText(value).width > maxWidth) value = `${value.slice(0, -2)}…`;
+    return value;
+  };
+
   const handleShare = async () => {
     setIsGeneratingImage(true);
     try {
+      await document.fonts.ready;
+      const rosterPlayers = auctionPlayers;
+      const rosterRows = Math.ceil(rosterPlayers.length / 2);
+      const canvasHeight = Math.max(1350, 760 + rosterRows * 112);
       const canvas = document.createElement('canvas');
-      canvas.width = 1600;
-      canvas.height = 900;
+      canvas.width = 2400;
+      canvas.height = canvasHeight;
       const context = canvas.getContext('2d');
       if (!context) throw new Error('Canvas is unavailable');
 
-      const [logo, manager, icon, ...playersImages] = await Promise.all([
+      const [background, fiestaLogo, logo, manager, icon, ...playersImages] = await Promise.all([
+        loadCardImage('/stadium_hero_bg.png'),
+        loadCardImage('/H_logo.png'),
         loadCardImage(logoUrl),
         loadCardImage(managerPhoto),
         loadCardImage(iconPlayer?.photoUrl ? normalizeImageUrl(iconPlayer.photoUrl) : undefined),
-        ...auctionPlayers.slice(0, 8).map(player => loadCardImage(player.photoUrl ? normalizeImageUrl(player.photoUrl) : undefined))
+        ...rosterPlayers.map(player => loadCardImage(player.photoUrl ? normalizeImageUrl(player.photoUrl) : undefined))
       ]);
 
-      const background = context.createLinearGradient(0, 0, 1600, 900);
-      background.addColorStop(0, '#071923');
-      background.addColorStop(0.55, '#0b2d3a');
-      background.addColorStop(1, '#16252d');
-      context.fillStyle = background;
+      context.fillStyle = '#061421';
       context.fillRect(0, 0, canvas.width, canvas.height);
-      context.fillStyle = team.color;
-      context.fillRect(0, 0, canvas.width, 12);
-      context.fillStyle = 'rgba(255,255,255,0.04)';
-      context.fillRect(0, 12, 560, canvas.height - 12);
+      context.save();
+      context.globalAlpha = 0.28;
+      drawCoverImage(context, background, 0, 0, canvas.width, canvas.height);
+      context.restore();
+      context.fillStyle = 'rgba(3, 16, 31, 0.76)';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.strokeStyle = '#4ee4ff';
+      context.lineWidth = 8;
+      context.strokeRect(46, 46, canvas.width - 92, canvas.height - 92);
+      context.strokeStyle = '#ffd600';
+      context.lineWidth = 4;
+      context.strokeRect(62, 62, canvas.width - 124, canvas.height - 124);
+
+      context.fillStyle = 'rgba(5, 19, 38, 0.96)';
+      context.fillRect(72, 72, 760, canvas.height - 144);
+      context.strokeStyle = team.color;
+      context.lineWidth = 6;
+      context.beginPath();
+      context.moveTo(832, 120);
+      context.lineTo(832, canvas.height - 120);
+      context.stroke();
+
+      drawContainImage(context, fiestaLogo, 1660, 86, 620, 180);
+      context.fillStyle = '#ffd600';
+      context.font = 'bold 28px Bebas Neue, sans-serif';
+      context.fillText('PLAYER / TEAM', 900, 190);
+      context.strokeStyle = '#ffd600';
+      context.lineWidth = 4;
+      context.beginPath();
+      context.moveTo(900, 220);
+      context.lineTo(2180, 220);
+      context.stroke();
 
       context.fillStyle = '#ffffff';
-      context.font = 'bold 54px Bebas Neue, sans-serif';
-      context.fillText(displayName.toUpperCase().slice(0, 24), 70, 105);
+      context.font = 'bold 82px Bebas Neue, sans-serif';
+      context.fillText(fitCanvasText(context, displayName.toUpperCase(), 1120, 'bold 82px Bebas Neue, sans-serif'), 116, 210);
       context.fillStyle = '#4ee4ff';
-      context.font = 'bold 24px Montserrat, sans-serif';
-      context.fillText(team.shortName, 72, 145);
+      context.font = 'bold 34px Montserrat, sans-serif';
+      context.fillText(team.shortName, 120, 270);
       context.fillStyle = '#ff6b00';
-      context.font = 'bold 20px Montserrat, sans-serif';
-      context.fillText(team.group ? `GROUP ${team.group}` : 'TEAM ROSTER', 72, 184);
+      context.font = 'bold 28px Montserrat, sans-serif';
+      context.fillText(team.group ? `GROUP ${team.group}` : 'TEAM ROSTER', 120, 318);
 
-      context.fillStyle = '#101820';
-      context.roundRect(70, 235, 180, 180, 24);
+      context.fillStyle = 'rgba(11, 45, 58, 0.9)';
+      context.roundRect(150, 385, 600, 390, 36);
       context.fill();
       context.save();
       context.beginPath();
-      context.roundRect(82, 247, 156, 156, 18);
+      context.roundRect(180, 415, 540, 330, 28);
       context.clip();
-      drawCoverImage(context, logo, 82, 247, 156, 156);
+      drawContainImage(context, logo, 180, 415, 540, 330);
       context.restore();
 
       context.fillStyle = '#9aa8b2';
-      context.font = 'bold 17px Montserrat, sans-serif';
-      context.fillText('TEAM MANAGER', 70, 490);
+      context.font = 'bold 22px Montserrat, sans-serif';
+      context.fillText('TEAM MANAGER', 120, 875);
       context.fillStyle = '#ffffff';
-      context.font = 'bold 28px Montserrat, sans-serif';
-      context.fillText(displayOwner.slice(0, 26), 70, 528);
+      context.font = 'bold 37px Montserrat, sans-serif';
+      context.fillText(fitCanvasText(context, displayOwner, 560, 'bold 37px Montserrat, sans-serif'), 120, 925);
+      if (manager) {
+        context.save();
+        context.beginPath();
+        context.roundRect(120, 980, 120, 120, 20);
+        context.clip();
+        drawCoverImage(context, manager, 120, 980, 120, 120);
+        context.restore();
+      }
       context.fillStyle = '#4ee4ff';
-      context.font = 'bold 30px Bebas Neue, sans-serif';
-      context.fillText(`${teamPlayers.length} PLAYERS`, 70, 600);
+      context.font = 'bold 42px Bebas Neue, sans-serif';
+      context.fillText(`${teamPlayers.length} PLAYERS`, 280, 1055);
+      context.fillStyle = '#9aa8b2';
+      context.font = '20px Montserrat, sans-serif';
+      context.fillText('ECE FOOTBALL FIESTA', 280, 1095);
 
       context.fillStyle = '#ffd600';
-      context.font = 'bold 18px Montserrat, sans-serif';
-      context.fillText('ICON PLAYER', 620, 66);
-      context.fillStyle = '#ffffff';
-      context.font = 'bold 29px Montserrat, sans-serif';
-      context.fillText((iconPlayer?.name || 'No icon player assigned').slice(0, 32), 730, 122);
+      context.font = 'bold 28px Bebas Neue, sans-serif';
+      context.fillText('ICON PLAYER', 900, 320);
+      context.fillStyle = 'rgba(11, 45, 58, 0.9)';
+      context.roundRect(900, 350, 1280, 180, 24);
+      context.fill();
       if (icon) {
         context.save();
         context.beginPath();
-        context.roundRect(620, 82, 88, 88, 14);
+        context.roundRect(930, 375, 130, 130, 18);
         context.clip();
-        drawCoverImage(context, icon, 620, 82, 88, 88);
+        drawCoverImage(context, icon, 930, 375, 130, 130);
         context.restore();
       }
+      context.fillStyle = '#ffffff';
+      context.font = 'bold 36px Montserrat, sans-serif';
+      context.fillText(fitCanvasText(context, iconPlayer?.name || 'No icon player assigned', 990, 'bold 36px Montserrat, sans-serif'), 1100, 435);
+      context.fillStyle = '#9aa8b2';
+      context.font = '21px Montserrat, sans-serif';
+      context.fillText(iconPlayer ? `${iconPlayer.roll}  •  ${iconPlayer.position}` : 'Assign an icon player', 1100, 475);
 
       context.fillStyle = '#4ee4ff';
-      context.font = 'bold 18px Montserrat, sans-serif';
-      context.fillText(`AUCTIONED SQUAD (${auctionPlayers.length})`, 620, 235);
-      auctionPlayers.slice(0, 8).forEach((player, index) => {
+      context.font = 'bold 28px Bebas Neue, sans-serif';
+      context.fillText(`SQUAD (${rosterPlayers.length})`, 900, 610);
+      rosterPlayers.forEach((player, index) => {
         const column = index % 2;
         const row = Math.floor(index / 2);
-        const x = 620 + column * 470;
-        const y = 270 + row * 120;
-        context.fillStyle = 'rgba(16,24,32,0.9)';
-        context.roundRect(x, y, 430, 96, 14);
+        const x = 900 + column * 650;
+        const y = 650 + row * 112;
+        context.fillStyle = 'rgba(4, 18, 31, 0.96)';
+        context.roundRect(x, y, 610, 90, 16);
         context.fill();
-        context.save();
-        context.beginPath();
-        context.roundRect(x + 12, y + 10, 76, 76, 12);
-        context.clip();
-        drawCoverImage(context, playersImages[index], x + 12, y + 10, 76, 76);
-        context.restore();
+        if (playersImages[index]) {
+          context.save();
+          context.beginPath();
+          context.roundRect(x + 12, y + 10, 70, 70, 12);
+          context.clip();
+          drawCoverImage(context, playersImages[index], x + 12, y + 10, 70, 70);
+          context.restore();
+        }
         context.fillStyle = '#ffffff';
-        context.font = 'bold 21px Montserrat, sans-serif';
-        context.fillText(player.name.slice(0, 25), x + 108, y + 43);
+        context.font = 'bold 23px Montserrat, sans-serif';
+        context.fillText(fitCanvasText(context, player.name, 470, 'bold 23px Montserrat, sans-serif'), x + 105, y + 42);
         context.fillStyle = '#9aa8b2';
-        context.font = '15px Montserrat, sans-serif';
-        context.fillText(`${player.roll}  •  ${player.position}`, x + 108, y + 70);
+        context.font = '16px Montserrat, sans-serif';
+        context.fillText(`${player.roll}  •  ${player.position}`, x + 105, y + 68);
       });
 
       setTeamImage(canvas.toDataURL('image/png'));
