@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import { Team, Player } from '../types';
 import { useApp } from '../context/AppContext';
-import { getGoogleDriveFileId, normalizeImageUrl, handleImageError } from '../utils/imageUtils';
-import { Shield, Users, Edit2, User, Crown, X, Share2, Download, Image as ImageIcon } from 'lucide-react';
+import { normalizeImageUrl, handleImageError } from '../utils/imageUtils';
+import { Shield, Users, Edit2, User, X } from 'lucide-react';
 
 interface TeamCardProps {
   team: Team;
@@ -20,8 +20,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const [editOwnerPhoto, setEditOwnerPhoto] = useState(team.ownerPhotoUrl || '');
   const [editLogo, setEditLogo] = useState(team.logoUrl || '');
   const [editColor, setEditColor] = useState(team.color);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [teamImage, setTeamImage] = useState<string | null>(null);
 
   const teamPlayers = players.filter(p => p.teamId === team.id);
   const displayName = team.name || `Team Slot ${team.id.replace('team-', '')}`;
@@ -45,248 +43,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const managerPhoto = normalizeImageUrl(team.ownerPhotoUrl);
   const logoUrl = normalizeImageUrl(team.logoUrl);
 
-  const loadCardImage = (...urls: Array<string | undefined>) => new Promise<HTMLImageElement | null>((resolve) => {
-    const candidates = urls.flatMap(url => {
-      if (!url) return [];
-      const fileId = getGoogleDriveFileId(url);
-      return [url, fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600` : undefined]
-        .filter((candidate): candidate is string => Boolean(candidate));
-    });
-    const tryCandidate = (index: number) => {
-      const url = candidates[index];
-      if (!url) return resolve(null);
-      const image = new window.Image();
-      image.onload = () => resolve(image);
-      image.onerror = () => tryCandidate(index + 1);
-      image.src = url.startsWith('/') ? url : `/api/image?url=${encodeURIComponent(url)}`;
-    };
-    tryCandidate(0);
-  });
-
-  const drawCoverImage = (context: CanvasRenderingContext2D, image: HTMLImageElement | null, x: number, y: number, width: number, height: number) => {
-    if (!image) return;
-    const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
-    const drawWidth = image.naturalWidth * scale;
-    const drawHeight = image.naturalHeight * scale;
-    context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
-  };
-
-  const drawContainImage = (context: CanvasRenderingContext2D, image: HTMLImageElement | null, x: number, y: number, width: number, height: number) => {
-    if (!image) return;
-    const scale = Math.min(width / image.naturalWidth, height / image.naturalHeight);
-    const drawWidth = image.naturalWidth * scale;
-    const drawHeight = image.naturalHeight * scale;
-    context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
-  };
-
-  const fitCanvasText = (context: CanvasRenderingContext2D, text: string, maxWidth: number, font: string) => {
-    context.font = font;
-    let value = text;
-    while (value.length > 1 && context.measureText(value).width > maxWidth) value = `${value.slice(0, -2)}…`;
-    return value;
-  };
-
-  const fitFont = (context: CanvasRenderingContext2D, text: string, maxWidth: number, family: string, weight: string, startingSize: number, minimumSize: number) => {
-    let size = startingSize;
-    do {
-      context.font = `${weight} ${size}px ${family}`;
-      if (context.measureText(text).width <= maxWidth || size === minimumSize) return context.font;
-      size -= 2;
-    } while (size >= minimumSize);
-    return context.font;
-  };
-
-  const drawPlaceholder = (context: CanvasRenderingContext2D, label: string, x: number, y: number, width: number, height: number, color: string) => {
-    context.fillStyle = color;
-    context.fillRect(x, y, width, height);
-    context.fillStyle = 'rgba(255,255,255,0.85)';
-    context.font = 'bold 32px Montserrat, sans-serif';
-    context.textAlign = 'center';
-    context.fillText(label.trim().slice(0, 2).toUpperCase() || '?', x + width / 2, y + height / 2 + 11);
-    context.textAlign = 'left';
-  };
-
-  const handleShare = async () => {
-    setIsGeneratingImage(true);
-    try {
-      await document.fonts.ready;
-      const rosterPlayers = auctionPlayers;
-      const rosterRows = Math.ceil(rosterPlayers.length / 2);
-      const canvasHeight = Math.max(1350, 760 + rosterRows * 112);
-      const canvas = document.createElement('canvas');
-      canvas.width = 2400;
-      canvas.height = canvasHeight;
-      const context = canvas.getContext('2d');
-      if (!context) throw new Error('Canvas is unavailable');
-
-      const [background, fiestaLogo, logo, manager, icon, ...playersImages] = await Promise.all([
-        loadCardImage('/stadium_hero_bg.png'),
-        loadCardImage('/H_logo.png'),
-        loadCardImage(team.logoUrl, logoUrl),
-        loadCardImage(team.ownerPhotoUrl, managerPhoto),
-        loadCardImage(iconPlayer?.photoUrl, iconPlayer?.photoUrl ? normalizeImageUrl(iconPlayer.photoUrl) : undefined),
-        ...rosterPlayers.map(player => loadCardImage(player.photoUrl, player.photoUrl ? normalizeImageUrl(player.photoUrl) : undefined))
-      ]);
-
-      context.fillStyle = '#061421';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      context.save();
-      context.globalAlpha = 0.28;
-      drawCoverImage(context, background, 0, 0, canvas.width, canvas.height);
-      context.restore();
-      context.fillStyle = 'rgba(3, 16, 31, 0.58)';
-      context.fillRect(0, 0, canvas.width, canvas.height);
-      context.strokeStyle = '#4ee4ff';
-      context.lineWidth = 8;
-      context.strokeRect(46, 46, canvas.width - 92, canvas.height - 92);
-      context.strokeStyle = '#ffd600';
-      context.lineWidth = 4;
-      context.strokeRect(62, 62, canvas.width - 124, canvas.height - 124);
-
-      context.fillStyle = 'rgba(5, 19, 38, 0.96)';
-      context.fillRect(72, 72, 760, canvas.height - 144);
-      context.strokeStyle = team.color;
-      context.lineWidth = 6;
-      context.beginPath();
-      context.moveTo(832, 120);
-      context.lineTo(832, canvas.height - 120);
-      context.stroke();
-
-      drawContainImage(context, fiestaLogo, 1660, 86, 620, 180);
-      context.fillStyle = '#ffd600';
-      context.font = 'bold 28px Bebas Neue, sans-serif';
-      context.fillText('PLAYER / TEAM', 900, 190);
-      context.strokeStyle = '#ffd600';
-      context.lineWidth = 4;
-      context.beginPath();
-      context.moveTo(900, 220);
-      context.lineTo(2180, 220);
-      context.stroke();
-
-      context.fillStyle = '#ffffff';
-      context.font = fitFont(context, displayName.toUpperCase(), 660, 'Bebas Neue, sans-serif', 'bold', 82, 34);
-      context.fillText(displayName.toUpperCase(), 116, 210);
-      context.fillStyle = '#4ee4ff';
-      context.font = 'bold 34px Montserrat, sans-serif';
-      context.fillText(team.shortName, 120, 270);
-      context.fillStyle = '#ff6b00';
-      context.font = 'bold 28px Montserrat, sans-serif';
-      context.fillText(team.group ? `GROUP ${team.group}` : 'TEAM ROSTER', 120, 318);
-
-      context.fillStyle = 'rgba(11, 45, 58, 0.9)';
-      context.roundRect(150, 385, 600, 390, 36);
-      context.fill();
-      context.save();
-      context.beginPath();
-      context.roundRect(180, 415, 540, 330, 28);
-      context.clip();
-      if (logo) drawContainImage(context, logo, 180, 415, 540, 330);
-      else drawPlaceholder(context, displayName, 180, 415, 540, 330, team.color);
-      context.restore();
-
-      context.fillStyle = '#9aa8b2';
-      context.font = 'bold 22px Montserrat, sans-serif';
-      context.fillText('TEAM MANAGER', 120, 875);
-      context.fillStyle = '#ffffff';
-      context.font = fitFont(context, displayOwner, 560, 'Montserrat, sans-serif', 'bold', 37, 22);
-      context.fillText(displayOwner, 120, 925);
-      if (manager) {
-        context.save();
-        context.beginPath();
-        context.roundRect(120, 980, 120, 120, 20);
-        context.clip();
-        drawCoverImage(context, manager, 120, 980, 120, 120);
-        context.restore();
-      } else {
-        drawPlaceholder(context, displayOwner, 120, 980, 120, 120, team.color);
-      }
-      context.fillStyle = '#4ee4ff';
-      context.font = 'bold 42px Bebas Neue, sans-serif';
-      context.fillText(`${teamPlayers.length} PLAYERS`, 280, 1055);
-      context.fillStyle = '#9aa8b2';
-      context.font = '20px Montserrat, sans-serif';
-      context.fillText('ECE FOOTBALL FIESTA', 280, 1095);
-
-      context.fillStyle = '#ffd600';
-      context.font = 'bold 28px Bebas Neue, sans-serif';
-      context.fillText('ICON PLAYER', 900, 320);
-      context.fillStyle = 'rgba(11, 45, 58, 0.9)';
-      context.roundRect(900, 350, 1280, 180, 24);
-      context.fill();
-      if (icon) {
-        context.save();
-        context.beginPath();
-        context.roundRect(930, 375, 130, 130, 18);
-        context.clip();
-        drawCoverImage(context, icon, 930, 375, 130, 130);
-        context.restore();
-      } else {
-        drawPlaceholder(context, iconPlayer?.name || 'Icon', 930, 375, 130, 130, '#806d00');
-      }
-      context.fillStyle = '#ffffff';
-      context.font = fitFont(context, iconPlayer?.name || 'No icon player assigned', 990, 'Montserrat, sans-serif', 'bold', 36, 20);
-      context.fillText(iconPlayer?.name || 'No icon player assigned', 1100, 435);
-      context.fillStyle = '#9aa8b2';
-      context.font = '21px Montserrat, sans-serif';
-      context.fillText(iconPlayer ? `${iconPlayer.roll}  •  ${iconPlayer.position}` : 'Assign an icon player', 1100, 475);
-
-      context.fillStyle = '#4ee4ff';
-      context.font = 'bold 28px Bebas Neue, sans-serif';
-      context.fillText(`SQUAD (${rosterPlayers.length})`, 900, 610);
-      rosterPlayers.forEach((player, index) => {
-        const column = index % 2;
-        const row = Math.floor(index / 2);
-        const x = 900 + column * 650;
-        const y = 650 + row * 112;
-        context.fillStyle = 'rgba(4, 18, 31, 0.96)';
-        context.roundRect(x, y, 610, 90, 16);
-        context.fill();
-        if (playersImages[index]) {
-          context.save();
-          context.beginPath();
-          context.roundRect(x + 12, y + 10, 70, 70, 12);
-          context.clip();
-          drawCoverImage(context, playersImages[index], x + 12, y + 10, 70, 70);
-          context.restore();
-        } else {
-          drawPlaceholder(context, player.name, x + 12, y + 10, 70, 70, team.color);
-        }
-        context.fillStyle = '#ffffff';
-        context.font = 'bold 23px Montserrat, sans-serif';
-        context.fillText(fitCanvasText(context, player.name, 470, 'bold 23px Montserrat, sans-serif'), x + 105, y + 42);
-        context.fillStyle = '#9aa8b2';
-        context.font = '16px Montserrat, sans-serif';
-        context.fillText(`${player.roll}  •  ${player.position}`, x + 105, y + 68);
-      });
-
-      setTeamImage(canvas.toDataURL('image/png'));
-    } catch (error) {
-      console.error('Unable to generate team card image', error);
-      window.alert('Unable to generate the team card image. Please try again.');
-    } finally {
-      setIsGeneratingImage(false);
-    }
-  };
-
-  const downloadTeamImage = () => {
-    if (!teamImage) return;
-    const link = document.createElement('a');
-    link.href = teamImage;
-    link.download = `${displayName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-team-card.png`;
-    link.click();
-  };
-
-  const shareTeamImage = async () => {
-    if (!teamImage) return;
-    const response = await fetch(teamImage);
-    const file = new File([await response.blob()], `${displayName}-team-card.png`, { type: 'image/png' });
-    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
-      await navigator.share({ title: `${displayName} Team Card`, files: [file] });
-    } else {
-      downloadTeamImage();
-    }
-  };
-
   return (
     <div 
       id={`team-card-${team.id}`}
@@ -295,6 +51,10 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
     >
       {/* Header Info */}
       <div className="p-5 lg:w-4/12 bg-gradient-to-b from-deep-blue/90 to-charcoal/90 space-y-3">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <img src="/H_logo.png" alt="ECE Football Fiesta" className="h-10 w-36 object-contain object-left" />
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-gray-400">Official Team Card</span>
+        </div>
         <div className="flex items-start justify-between gap-4">
           
           {/* Logo & Team Title */}
@@ -331,15 +91,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              onClick={handleShare}
-              className="p-2 bg-charcoal/90 hover:bg-light-cyan hover:text-charcoal text-light-cyan rounded-xl border border-light-cyan/40 transition-colors shadow-md"
-              title="Share team card"
-              aria-label={`Share ${displayName} team card`}
-            >
-              {isGeneratingImage ? <ImageIcon size={16} className="animate-pulse" /> : <Share2 size={16} />}
-            </button>
-
           {isAdmin && editable && (
             <div className="flex items-center gap-2">
             <button
@@ -402,44 +153,34 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
             {teamPlayers.length} Players
           </p>
         </div>
+
+        {/* Icon Player */}
+        <div className="rounded-2xl border border-primary-yellow/30 bg-gradient-to-r from-primary-yellow/10 to-transparent p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-yellow">Icon Player</span>
+            <span className="rounded bg-primary-yellow/20 px-1.5 py-0.5 text-[10px] font-bebas text-primary-yellow">GOLD ICON</span>
+          </div>
+          {iconPlayer ? (
+            <div className="flex items-center gap-3">
+              <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-primary-yellow bg-charcoal">
+                {iconPlayer.photoUrl ? (
+                  <img src={normalizeImageUrl(iconPlayer.photoUrl)} alt={iconPlayer.name} className="h-full w-full object-cover" onError={(e) => handleImageError(e, iconPlayer.photoUrl)} />
+                ) : <User size={22} className="m-4 text-gray-400" />}
+              </div>
+              <div className="min-w-0">
+                <p className="break-words text-sm font-bold leading-tight text-white">{iconPlayer.name}</p>
+                <p className="text-[10px] text-gray-400">{iconPlayer.roll} • {iconPlayer.position}</p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-xs italic text-gray-500">No Icon Player Assigned</p>
+          )}
+        </div>
       </div>
 
       {/* Roster Breakdown with Player Photos & Names */}
       <div className="p-5 lg:w-8/12 border-t lg:border-t-0 lg:border-l border-gray-800/80 space-y-3">
         
-        {/* Icon Player Section */}
-        <div>
-          <h4 className="text-xs font-semibold text-primary-yellow uppercase tracking-wider mb-2 flex items-center justify-between">
-            <span>Icon Player</span>
-            <span className="bg-primary-yellow/20 text-primary-yellow px-1.5 py-0.5 rounded text-[10px] font-bebas">GOLD ICON</span>
-          </h4>
-
-          {iconPlayer ? (
-            <div className="flex items-center gap-3 bg-gradient-to-r from-primary-yellow/10 to-transparent p-2.5 rounded-xl border border-primary-yellow/30">
-              <div className="w-10 h-10 rounded-lg bg-charcoal border border-primary-yellow overflow-hidden flex items-center justify-center shrink-0">
-                {iconPlayer.photoUrl ? (
-                  <img 
-                    src={normalizeImageUrl(iconPlayer.photoUrl)} 
-                    alt={iconPlayer.name} 
-                    className="w-full h-full object-cover" 
-                    onError={(e) => handleImageError(e, iconPlayer.photoUrl)}
-                  />
-                ) : (
-                  <User size={18} className="text-gray-400" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="break-words text-sm font-bold text-white leading-tight">{iconPlayer.name}</p>
-                <p className="text-[10px] text-gray-400">{iconPlayer.roll} • {iconPlayer.position}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="p-2.5 rounded-xl border border-dashed border-gray-700 text-center text-xs text-gray-500">
-              No Icon Player Assigned
-            </div>
-          )}
-        </div>
-
         {/* Auctioned Roster Section */}
         <div>
           <h4 className="text-xs font-semibold text-light-cyan uppercase tracking-wider mb-2">
@@ -474,41 +215,6 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
           )}
         </div>
       </div>
-
-      {teamImage && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4 sm:p-8">
-          <div className="flex max-h-full w-full max-w-6xl flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-bebas text-3xl text-white">{displayName} TEAM CARD</h3>
-              <button
-                onClick={() => setTeamImage(null)}
-                className="p-2 text-gray-300 hover:text-white"
-                title="Close preview"
-                aria-label="Close team card preview"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="min-h-0 overflow-auto rounded-2xl border border-light-cyan/30 bg-charcoal p-2 shadow-2xl">
-              <img src={teamImage} alt={`${displayName} team card`} className="mx-auto h-auto w-full object-contain" />
-            </div>
-            <div className="flex flex-wrap justify-end gap-3">
-              <button
-                onClick={downloadTeamImage}
-                className="flex items-center gap-2 rounded-xl bg-gray-800 px-5 py-3 font-bebas text-lg text-white hover:bg-gray-700"
-              >
-                <Download size={18} /> Download PNG
-              </button>
-              <button
-                onClick={() => void shareTeamImage()}
-                className="flex items-center gap-2 rounded-xl bg-primary-yellow px-5 py-3 font-bebas text-lg font-bold text-charcoal hover:opacity-90"
-              >
-                <Share2 size={18} /> Share PNG
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Top-Front Admin Edit Team Modal Popup */}
       {isEditing && (
