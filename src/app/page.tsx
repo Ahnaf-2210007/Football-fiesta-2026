@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import { PlayerCard } from '@/components/PlayerCard';
 import { BrandLogo } from '@/components/BrandLogo';
+import { normalizeImageUrl, handleImageError } from '@/utils/imageUtils';
 import { 
   Gavel, 
   Trophy, 
@@ -165,17 +166,22 @@ export default function HomePage() {
             return (
               <div key={team.id} className="glass-panel p-6 rounded-2xl space-y-4 hover:border-primary-yellow/50 transition-all">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex min-w-0 items-center gap-3">
                     <div className="w-12 h-12 rounded-xl bg-charcoal border-2 overflow-hidden flex items-center justify-center shrink-0" style={{ borderColor: team.color }}>
                       {team.logoUrl ? (
-                        <img src={team.logoUrl} alt={team.name} className="w-full h-full object-cover" />
+                        <img
+                          src={normalizeImageUrl(team.logoUrl)}
+                          alt={team.name}
+                          className="w-full h-full object-contain p-1"
+                          onError={(e) => handleImageError(e, team.logoUrl)}
+                        />
                       ) : (
                         <Shield style={{ color: team.color }} />
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-bebas text-2xl text-white">{team.name}</h3>
-                      <p className="text-xs text-gray-400">Manager: {team.owner}</p>
+                    <div className="min-w-0">
+                      <h3 className="break-words font-bebas text-2xl leading-tight text-white">{team.name || 'Unnamed Team'}</h3>
+                      <p className="break-words text-xs text-gray-400">Manager: {team.owner || 'Not configured'}</p>
                     </div>
                   </div>
                 </div>
