@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Team, Player } from '../types';
 import { useApp } from '../context/AppContext';
 import { normalizeImageUrl, handleImageError } from '../utils/imageUtils';
-import { Shield, Users, Edit2, User, Crown, X, Share2, Check } from 'lucide-react';
+import { Shield, Users, Edit2, User, Crown, X, Share2, Download, Image as ImageIcon } from 'lucide-react';
 
 interface TeamCardProps {
   team: Team;
@@ -20,7 +20,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const [editOwnerPhoto, setEditOwnerPhoto] = useState(team.ownerPhotoUrl || '');
   const [editLogo, setEditLogo] = useState(team.logoUrl || '');
   const [editColor, setEditColor] = useState(team.color);
-  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [teamImage, setTeamImage] = useState<string | null>(null);
 
   const teamPlayers = players.filter(p => p.teamId === team.id);
   const displayName = team.name || `Team Slot ${team.id.replace('team-', '')}`;
@@ -44,32 +45,145 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const managerPhoto = normalizeImageUrl(team.ownerPhotoUrl);
   const logoUrl = normalizeImageUrl(team.logoUrl);
 
-  const handleShare = async () => {
-    const shareUrl = `${window.location.origin}/teams#team-card-${encodeURIComponent(team.id)}`;
-    const shareData = {
-      title: `${displayName} Team Card`,
-      text: `${displayName} - ${teamPlayers.length} players`,
-      url: shareUrl
-    };
+  const loadCardImage = (url?: string) => new Promise<HTMLImageElement | null>((resolve) => {
+    if (!url) return resolve(null);
+    const image = new window.Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => resolve(null);
+    image.src = url;
+  });
 
+  const drawCoverImage = (context: CanvasRenderingContext2D, image: HTMLImageElement | null, x: number, y: number, width: number, height: number) => {
+    if (!image) return;
+    const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+    const drawWidth = image.naturalWidth * scale;
+    const drawHeight = image.naturalHeight * scale;
+    context.drawImage(image, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
+  };
+
+  const handleShare = async () => {
+    setIsGeneratingImage(true);
     try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-        setShareState('shared');
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        setShareState('copied');
+      const canvas = document.createElement('canvas');
+      canvas.width = 1600;
+      canvas.height = 900;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas is unavailable');
+
+      const [logo, manager, icon, ...playersImages] = await Promise.all([
+        loadCardImage(logoUrl),
+        loadCardImage(managerPhoto),
+        loadCardImage(iconPlayer?.photoUrl ? normalizeImageUrl(iconPlayer.photoUrl) : undefined),
+        ...auctionPlayers.slice(0, 8).map(player => loadCardImage(player.photoUrl ? normalizeImageUrl(player.photoUrl) : undefined))
+      ]);
+
+      const background = context.createLinearGradient(0, 0, 1600, 900);
+      background.addColorStop(0, '#071923');
+      background.addColorStop(0.55, '#0b2d3a');
+      background.addColorStop(1, '#16252d');
+      context.fillStyle = background;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.fillStyle = team.color;
+      context.fillRect(0, 0, canvas.width, 12);
+      context.fillStyle = 'rgba(255,255,255,0.04)';
+      context.fillRect(0, 12, 560, canvas.height - 12);
+
+      context.fillStyle = '#ffffff';
+      context.font = 'bold 54px Bebas Neue, sans-serif';
+      context.fillText(displayName.toUpperCase().slice(0, 24), 70, 105);
+      context.fillStyle = '#4ee4ff';
+      context.font = 'bold 24px Montserrat, sans-serif';
+      context.fillText(team.shortName, 72, 145);
+      context.fillStyle = '#ff6b00';
+      context.font = 'bold 20px Montserrat, sans-serif';
+      context.fillText(team.group ? `GROUP ${team.group}` : 'TEAM ROSTER', 72, 184);
+
+      context.fillStyle = '#101820';
+      context.roundRect(70, 235, 180, 180, 24);
+      context.fill();
+      context.save();
+      context.beginPath();
+      context.roundRect(82, 247, 156, 156, 18);
+      context.clip();
+      drawCoverImage(context, logo, 82, 247, 156, 156);
+      context.restore();
+
+      context.fillStyle = '#9aa8b2';
+      context.font = 'bold 17px Montserrat, sans-serif';
+      context.fillText('TEAM MANAGER', 70, 490);
+      context.fillStyle = '#ffffff';
+      context.font = 'bold 28px Montserrat, sans-serif';
+      context.fillText(displayOwner.slice(0, 26), 70, 528);
+      context.fillStyle = '#4ee4ff';
+      context.font = 'bold 30px Bebas Neue, sans-serif';
+      context.fillText(`${teamPlayers.length} PLAYERS`, 70, 600);
+
+      context.fillStyle = '#ffd600';
+      context.font = 'bold 18px Montserrat, sans-serif';
+      context.fillText('ICON PLAYER', 620, 66);
+      context.fillStyle = '#ffffff';
+      context.font = 'bold 29px Montserrat, sans-serif';
+      context.fillText((iconPlayer?.name || 'No icon player assigned').slice(0, 32), 730, 122);
+      if (icon) {
+        context.save();
+        context.beginPath();
+        context.roundRect(620, 82, 88, 88, 14);
+        context.clip();
+        drawCoverImage(context, icon, 620, 82, 88, 88);
+        context.restore();
       }
-      window.setTimeout(() => setShareState('idle'), 2200);
+
+      context.fillStyle = '#4ee4ff';
+      context.font = 'bold 18px Montserrat, sans-serif';
+      context.fillText(`AUCTIONED SQUAD (${auctionPlayers.length})`, 620, 235);
+      auctionPlayers.slice(0, 8).forEach((player, index) => {
+        const column = index % 2;
+        const row = Math.floor(index / 2);
+        const x = 620 + column * 470;
+        const y = 270 + row * 120;
+        context.fillStyle = 'rgba(16,24,32,0.9)';
+        context.roundRect(x, y, 430, 96, 14);
+        context.fill();
+        context.save();
+        context.beginPath();
+        context.roundRect(x + 12, y + 10, 76, 76, 12);
+        context.clip();
+        drawCoverImage(context, playersImages[index], x + 12, y + 10, 76, 76);
+        context.restore();
+        context.fillStyle = '#ffffff';
+        context.font = 'bold 21px Montserrat, sans-serif';
+        context.fillText(player.name.slice(0, 25), x + 108, y + 43);
+        context.fillStyle = '#9aa8b2';
+        context.font = '15px Montserrat, sans-serif';
+        context.fillText(`${player.roll}  •  ${player.position}`, x + 108, y + 70);
+      });
+
+      setTeamImage(canvas.toDataURL('image/png'));
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      try {
-        await navigator.clipboard.writeText(shareUrl);
-        setShareState('copied');
-        window.setTimeout(() => setShareState('idle'), 2200);
-      } catch {
-        setShareState('idle');
-      }
+      console.error('Unable to generate team card image', error);
+      window.alert('Unable to generate the team card image. Please try again.');
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const downloadTeamImage = () => {
+    if (!teamImage) return;
+    const link = document.createElement('a');
+    link.href = teamImage;
+    link.download = `${displayName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-team-card.png`;
+    link.click();
+  };
+
+  const shareTeamImage = async () => {
+    if (!teamImage) return;
+    const response = await fetch(teamImage);
+    const file = new File([await response.blob()], `${displayName}-team-card.png`, { type: 'image/png' });
+    if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+      await navigator.share({ title: `${displayName} Team Card`, files: [file] });
+    } else {
+      downloadTeamImage();
     }
   };
 
@@ -123,7 +237,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
               title="Share team card"
               aria-label={`Share ${displayName} team card`}
             >
-              {shareState === 'idle' ? <Share2 size={16} /> : <Check size={16} />}
+              {isGeneratingImage ? <ImageIcon size={16} className="animate-pulse" /> : <Share2 size={16} />}
             </button>
 
           {isAdmin && editable && (
@@ -260,6 +374,41 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
           )}
         </div>
       </div>
+
+      {teamImage && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 p-4 sm:p-8">
+          <div className="flex max-h-full w-full max-w-6xl flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bebas text-3xl text-white">{displayName} TEAM CARD</h3>
+              <button
+                onClick={() => setTeamImage(null)}
+                className="p-2 text-gray-300 hover:text-white"
+                title="Close preview"
+                aria-label="Close team card preview"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="min-h-0 overflow-auto rounded-2xl border border-light-cyan/30 bg-charcoal p-2 shadow-2xl">
+              <img src={teamImage} alt={`${displayName} team card`} className="mx-auto h-auto w-full object-contain" />
+            </div>
+            <div className="flex flex-wrap justify-end gap-3">
+              <button
+                onClick={downloadTeamImage}
+                className="flex items-center gap-2 rounded-xl bg-gray-800 px-5 py-3 font-bebas text-lg text-white hover:bg-gray-700"
+              >
+                <Download size={18} /> Download PNG
+              </button>
+              <button
+                onClick={() => void shareTeamImage()}
+                className="flex items-center gap-2 rounded-xl bg-primary-yellow px-5 py-3 font-bebas text-lg font-bold text-charcoal hover:opacity-90"
+              >
+                <Share2 size={18} /> Share PNG
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Top-Front Admin Edit Team Modal Popup */}
       {isEditing && (
