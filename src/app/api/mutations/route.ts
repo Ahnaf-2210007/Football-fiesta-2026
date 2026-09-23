@@ -125,6 +125,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (action === 'updateFixtureSchedule') {
+      const fixture = payload.fixture;
+      await query('UPDATE fixtures SET scheduled_date=$2, scheduled_time=$3, updated_at=now() WHERE id=$1', [fixture.id, fixture.scheduledDate || null, fixture.scheduledTime || null]);
+      return NextResponse.json({ ok: true });
+    }
+
     if (action === 'removeTeam') {
       const client = await (await import('@/lib/db')).pool?.connect();
       if (!client) throw new Error('DATABASE_URL is not configured');

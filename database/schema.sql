@@ -90,9 +90,14 @@ CREATE TABLE IF NOT EXISTS fixtures (
   is_completed BOOLEAN NOT NULL DEFAULT false,
   stage_name TEXT NOT NULL,
   time_slot TEXT,
+  scheduled_date DATE,
+  scheduled_time TIME,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS scheduled_date DATE;
+ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS scheduled_time TIME;
 
 CREATE TABLE IF NOT EXISTS tournament_state (
   id TEXT PRIMARY KEY,

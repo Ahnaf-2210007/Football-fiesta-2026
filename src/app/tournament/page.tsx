@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useApp } from '@/context/AppContext';
-import { GroupStanding } from '@/types';
+import { GroupStanding, MatchFixture } from '@/types';
 import { 
   Trophy, 
   Calendar, 
@@ -15,12 +15,58 @@ import {
   X
 } from 'lucide-react';
 
+function FixtureScheduleEditor({
+  fixture,
+  isAdmin,
+  onChange
+}: {
+  fixture: MatchFixture;
+  isAdmin: boolean;
+  onChange: (fixtureId: string, date?: string, time?: string) => void;
+}) {
+  if (isAdmin) {
+    return (
+      <div className="grid grid-cols-2 gap-2 bg-charcoal/70 p-3 rounded-xl border border-gray-700">
+        <label className="text-[10px] text-gray-400 uppercase">
+          Date
+          <input
+            type="date"
+            value={fixture.scheduledDate || ''}
+            onChange={(e) => onChange(fixture.id, e.target.value, fixture.scheduledTime)}
+            className="mt-1 w-full bg-deep-blue border border-gray-600 rounded px-2 py-2 text-xs text-white focus:border-primary-yellow focus:outline-none"
+          />
+        </label>
+        <label className="text-[10px] text-gray-400 uppercase">
+          Time
+          <input
+            type="time"
+            value={fixture.scheduledTime || ''}
+            onChange={(e) => onChange(fixture.id, fixture.scheduledDate, e.target.value)}
+            className="mt-1 w-full bg-deep-blue border border-gray-600 rounded px-2 py-2 text-xs text-white focus:border-primary-yellow focus:outline-none"
+          />
+        </label>
+      </div>
+    );
+  }
+
+  return (
+    <div className="text-center text-xs text-gray-400 bg-charcoal/60 px-3 py-2 rounded-xl border border-gray-800">
+      {fixture.scheduledDate || fixture.scheduledTime ? (
+        <span>{fixture.scheduledDate || 'Date pending'}{fixture.scheduledTime ? ` at ${fixture.scheduledTime}` : ''}</span>
+      ) : (
+        <span className="italic">Date and time to be announced</span>
+      )}
+    </div>
+  );
+}
+
 export default function TournamentPage() {
   const { 
     isAdmin, 
     teams, 
     fixtures, 
-    updateFixtureScore, 
+    updateFixtureScore,
+    updateFixtureSchedule,
     standingsOverrides, 
     updateStandingOverride, 
     resetStandingOverrides 
@@ -318,8 +364,8 @@ export default function TournamentPage() {
               {fixtures.filter(f => f.group === 'A' || f.group === 'B').map((f) => (
                 <div key={f.id} className="glass-panel p-6 rounded-2xl space-y-4">
                   <div className="flex items-center justify-between text-xs border-b border-gray-800 pb-2">
-                    <span className="font-bebas text-base text-primary-yellow">MATCH #{f.matchNo}</span>
-                    <span className="text-gray-400">{f.stageName}</span>
+                    <span className="font-bebas text-base text-primary-yellow">GROUP {f.group}</span>
+                    <span className="text-gray-400">{f.stageName.replace(/\s*-\s*Match\s*\d+$/i, '')}</span>
                   </div>
 
                   <div className="flex items-center justify-between py-2">
@@ -335,6 +381,8 @@ export default function TournamentPage() {
                       <p className="font-bebas text-xl text-white leading-tight">{f.team2Name}</p>
                     </div>
                   </div>
+
+                  <FixtureScheduleEditor fixture={f} isAdmin={isAdmin} onChange={updateFixtureSchedule} />
 
                   {/* Score Logger */}
                   {isAdmin ? (
@@ -394,6 +442,8 @@ export default function TournamentPage() {
                   </div>
                 </div>
 
+                {sf1Fixture && <FixtureScheduleEditor fixture={sf1Fixture} isAdmin={isAdmin} onChange={updateFixtureSchedule} />}
+
                 {/* Score Logger */}
                 {isAdmin ? (
                   <div className="bg-charcoal/80 p-3 rounded-xl border border-gray-700 flex items-center justify-center gap-3 mt-4">
@@ -438,6 +488,8 @@ export default function TournamentPage() {
                     <p className="text-white font-semibold">{runnerUpA?.teamName || 'Runner-up Group A'}</p>
                   </div>
                 </div>
+
+                {sf2Fixture && <FixtureScheduleEditor fixture={sf2Fixture} isAdmin={isAdmin} onChange={updateFixtureSchedule} />}
 
                 {/* Score Logger */}
                 {isAdmin ? (
@@ -485,6 +537,8 @@ export default function TournamentPage() {
                     <p className="text-white font-bold">Winner Semifinal 2</p>
                   </div>
                 </div>
+
+                {finalFixture && <FixtureScheduleEditor fixture={finalFixture} isAdmin={isAdmin} onChange={updateFixtureSchedule} />}
 
                 {/* Score Logger */}
                 {isAdmin ? (

@@ -49,7 +49,8 @@ export async function GET() {
                team1_name AS "team1Name", team2_id AS "team2Id", team2_name AS "team2Name",
                team1_score AS "team1Score", team2_score AS "team2Score",
                team1_pens AS "team1Pens", team2_pens AS "team2Pens",
-               is_completed AS "isCompleted", stage_name AS "stageName", time_slot AS "timeSlot"
+               is_completed AS "isCompleted", stage_name AS "stageName", time_slot AS "timeSlot",
+               scheduled_date AS "scheduledDate", scheduled_time AS "scheduledTime"
         FROM fixtures ORDER BY match_no
       `),
       query(`

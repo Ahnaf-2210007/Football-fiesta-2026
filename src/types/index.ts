@@ -48,6 +48,8 @@ export interface MatchFixture {
   isCompleted: boolean;
   stageName: string;
   timeSlot?: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
 }
 
 export interface GroupStanding {

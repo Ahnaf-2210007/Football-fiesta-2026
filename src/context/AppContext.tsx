@@ -52,6 +52,7 @@ interface AppContextType {
 
   // Tournament actions
   updateFixtureScore: (fixtureId: string, team1Score?: number, team2Score?: number, team1Pens?: number, team2Pens?: number) => void;
+  updateFixtureSchedule: (fixtureId: string, scheduledDate?: string, scheduledTime?: string) => void;
   updateStandingOverride: (teamId: string, overrideData: Partial<GroupStanding>) => void;
   resetStandingOverrides: () => void;
 
@@ -473,6 +474,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (fixture) persistMutation('updateFixtureScore', { fixture: { ...fixture, team1Score, team2Score, team1Pens, team2Pens } as unknown as Record<string, unknown> });
   };
 
+  const updateFixtureSchedule = (fixtureId: string, scheduledDate?: string, scheduledTime?: string) => {
+    setFixtures(prev => prev.map(fixture => fixture.id === fixtureId
+      ? { ...fixture, scheduledDate: scheduledDate || undefined, scheduledTime: scheduledTime || undefined }
+      : fixture));
+    persistMutation('updateFixtureSchedule', { fixture: { id: fixtureId, scheduledDate, scheduledTime } });
+  };
+
   const updateStandingOverride = (teamId: string, overrideData: Partial<GroupStanding>) => {
     const nextOverride = { ...overrideData, manualOverride: true };
     setStandingsOverrides(prev => ({
@@ -559,6 +567,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bulkImportPlayers,
         incrementPlayerGoals,
         updateFixtureScore,
+        updateFixtureSchedule,
         updateStandingOverride,
         resetStandingOverrides,
         addRule,
