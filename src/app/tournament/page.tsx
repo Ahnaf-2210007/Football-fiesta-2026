@@ -12,8 +12,32 @@ import {
   CheckCircle2, 
   Award,
   Swords,
-  X
+  X,
+  MapPin
 } from 'lucide-react';
+
+const FIXTURE_LOCATION = 'Offside Turf, Rajshahi';
+
+const formatFixtureDate = (value?: string) => {
+  if (!value) return 'Date to be announced';
+  const datePart = value.slice(0, 10);
+  const [year, month, day] = datePart.split('-').map(Number);
+  if (!year || !month || !day) return value;
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+};
+
+const formatFixtureTime = (value?: string) => {
+  if (!value) return 'Time to be announced';
+  const [hours, minutes] = value.slice(0, 5).split(':').map(Number);
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return value;
+  const suffix = hours >= 12 ? 'PM' : 'AM';
+  const displayHour = hours % 12 || 12;
+  return `${displayHour}:${String(minutes).padStart(2, '0')} ${suffix}`;
+};
 
 function FixtureScheduleEditor({
   fixture,
@@ -26,9 +50,14 @@ function FixtureScheduleEditor({
 }) {
   if (isAdmin) {
     return (
-      <div className="grid grid-cols-2 gap-2 bg-charcoal/70 p-3 rounded-xl border border-gray-700">
+      <div className="space-y-3 rounded-xl border border-gray-700 bg-charcoal/70 p-3">
+        <div className="flex items-center gap-2 border-b border-gray-700 pb-2 text-xs font-semibold text-light-cyan">
+          <MapPin size={15} />
+          <span>{FIXTURE_LOCATION}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
         <label className="text-[10px] text-gray-400 uppercase">
-          Date
+          Fixed date
           <input
             type="date"
             value={fixture.scheduledDate || ''}
@@ -37,7 +66,7 @@ function FixtureScheduleEditor({
           />
         </label>
         <label className="text-[10px] text-gray-400 uppercase">
-          Time
+          Fixed time
           <input
             type="time"
             value={fixture.scheduledTime || ''}
@@ -45,17 +74,24 @@ function FixtureScheduleEditor({
             className="mt-1 w-full bg-deep-blue border border-gray-600 rounded px-2 py-2 text-xs text-white focus:border-primary-yellow focus:outline-none"
           />
         </label>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="text-center text-xs text-gray-400 bg-charcoal/60 px-3 py-2 rounded-xl border border-gray-800">
-      {fixture.scheduledDate || fixture.scheduledTime ? (
-        <span>{fixture.scheduledDate || 'Date pending'}{fixture.scheduledTime ? ` at ${fixture.scheduledTime}` : ''}</span>
-      ) : (
-        <span className="italic">Date and time to be announced</span>
-      )}
+    <div className="space-y-2 rounded-xl border border-teal/30 bg-charcoal/75 px-3 py-3 text-center">
+      <div className="flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+        <MapPin size={14} className="text-vibrant-orange" />
+        <span>{FIXTURE_LOCATION}</span>
+      </div>
+      <div className="flex items-center justify-center gap-2 text-sm font-semibold text-white">
+        <Calendar size={15} className="text-primary-yellow" />
+        <span>{formatFixtureDate(fixture.scheduledDate)}</span>
+        <span className="text-gray-500">at</span>
+        <span>{formatFixtureTime(fixture.scheduledTime)}</span>
+      </div>
+      <span className="block text-[10px] font-semibold uppercase tracking-wider text-teal">Fixed fixture schedule</span>
     </div>
   );
 }
