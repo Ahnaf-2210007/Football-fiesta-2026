@@ -36,7 +36,7 @@ const normalizeImageUrl = (value: unknown) => {
 };
 
 export default function PlayersDirectoryPage() {
-  const { isAdmin, teams, players, addPlayer, updatePlayer, markPlayerSold, markPlayerUnsold, deletePlayer, bulkImportPlayers } = useApp();
+  const { isAdmin, teams, players, addPlayer, updatePlayer, directAssignPlayer, markPlayerUnsold, deletePlayer, bulkImportPlayers } = useApp();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [positionFilter, setPositionFilter] = useState<string>('ALL');
@@ -53,7 +53,6 @@ export default function PlayersDirectoryPage() {
   // Edit player modal state
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [fixTeamId, setFixTeamId] = useState('');
-  const [fixPrice, setFixPrice] = useState(50);
 
   // Bulk import state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -257,7 +256,6 @@ export default function PlayersDirectoryPage() {
                     onClick={() => {
                       setEditingPlayer(player);
                       setFixTeamId(player.teamId || '');
-                      setFixPrice(player.soldPrice || 50);
                     }}
                     className="p-2 bg-primary-yellow text-charcoal rounded-lg hover:scale-110 shadow-md font-bold text-xs"
                     title="Edit Player Info"
@@ -473,7 +471,7 @@ export default function PlayersDirectoryPage() {
               </div>
 
               <div className="bg-charcoal/80 border border-primary-yellow/30 rounded-xl p-4 space-y-3">
-                <h4 className="font-bebas text-xl text-primary-yellow">Team Assignment & Price</h4>
+                <h4 className="font-bebas text-xl text-primary-yellow">Direct Team Assignment</h4>
                 <select
                   value={fixTeamId}
                   onChange={(e) => setFixTeamId(e.target.value)}
@@ -482,25 +480,17 @@ export default function PlayersDirectoryPage() {
                   <option value="">Choose team</option>
                   {teams.map(team => <option key={team.id} value={team.id}>{team.name || `Team Slot ${team.id.replace('team-', '')}`}</option>)}
                 </select>
-                <input
-                  type="number"
-                  min="0"
-                  value={fixPrice}
-                  onChange={(e) => setFixPrice(Number(e.target.value))}
-                  placeholder="Fix price (TK)"
-                  className="w-full bg-deep-blue border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-primary-yellow"
-                />
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => {
                       if (!fixTeamId) return window.alert('Choose a team first.');
-                      markPlayerSold(editingPlayer.id, fixTeamId, fixPrice);
+                      directAssignPlayer(editingPlayer.id, fixTeamId);
                       setEditingPlayer(null);
                     }}
                     className="flex-1 py-2.5 bg-primary-yellow text-charcoal font-bebas rounded-xl"
                   >
-                    Fix Player to Team
+                    Assign Directly (Free)
                   </button>
                   <button
                     type="button"

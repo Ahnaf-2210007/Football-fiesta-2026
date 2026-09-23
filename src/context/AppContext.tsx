@@ -14,7 +14,6 @@ const EMPTY_TEAMS: Team[] = INITIAL_TEAMS.map((team, index) => ({
   color: team.color,
   startingPurse: 1500,
   spentPurse: 0,
-  maxSquadSize: 11,
   group: undefined
 }));
 
@@ -35,6 +34,7 @@ interface AppContextType {
   currentStagePlayer: Player | null;
   drawNextRandomPlayer: () => Player | null;
   markPlayerSold: (playerId: string, teamId: string, price: number) => void;
+  directAssignPlayer: (playerId: string, teamId: string) => void;
   markPlayerUnsold: (playerId: string) => void;
   assignIconPlayer: (playerId: string, teamId: string, price: number) => void;
   unassignIconPlayer: (playerId: string) => void;
@@ -381,6 +381,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 150);
   };
 
+  const directAssignPlayer = (playerId: string, teamId: string) => {
+    const targetTeam = teams.find(t => t.id === teamId);
+    const currentPlayer = players.find(p => p.id === playerId);
+    if (!targetTeam || !currentPlayer) return;
+
+    setPlayers(prev => prev.map(player => player.id === playerId ? {
+      ...player,
+      status: player.isIcon ? 'ICON' : 'SOLD',
+      soldPrice: undefined,
+      teamId: targetTeam.id,
+      teamName: targetTeam.name
+    } : player));
+    setTeams(prev => prev.map(team => {
+      if (team.id === teamId && currentPlayer.isIcon) {
+        return {
+          ...team,
+          iconPlayerId: playerId,
+          spentPurse: team.id === currentPlayer.teamId && currentPlayer.soldPrice
+            ? Math.max(0, team.spentPurse - currentPlayer.soldPrice)
+            : team.spentPurse
+        };
+      }
+      if (team.id === currentPlayer.teamId && currentPlayer.soldPrice) {
+        return { ...team, spentPurse: Math.max(0, team.spentPurse - currentPlayer.soldPrice) };
+      }
+      if (team.id !== teamId && team.iconPlayerId === playerId) {
+        return { ...team, iconPlayerId: undefined };
+      }
+      return team;
+    }));
+    persistMutation('directAssignPlayer', { playerId, teamId });
+  };
+
   const markPlayerUnsold = (playerId: string) => {
     const currentPlayer = players.find(p => p.id === playerId);
     setPlayers(prev => prev.map(p => {
@@ -512,6 +545,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentStagePlayer,
         drawNextRandomPlayer,
         markPlayerSold,
+        directAssignPlayer,
         markPlayerUnsold,
         assignIconPlayer,
         unassignIconPlayer,

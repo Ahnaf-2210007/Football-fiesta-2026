@@ -30,7 +30,6 @@ export interface Team {
   color: string;
   startingPurse: number;
   spentPurse: number;
-  maxSquadSize: number;
   group?: 'A' | 'B';
 }
 

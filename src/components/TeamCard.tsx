@@ -143,7 +143,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
             <span className="text-xs text-gray-300 font-semibold uppercase">Squad Roster</span>
           </div>
           <p className="font-bebas text-xl tracking-wide text-light-cyan">
-            {teamPlayers.length} / {team.maxSquadSize} Players
+            {teamPlayers.length} Players
           </p>
         </div>
       </div>
@@ -187,7 +187,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
         {/* Auctioned Roster Section */}
         <div>
           <h4 className="text-xs font-semibold text-light-cyan uppercase tracking-wider mb-2">
-            Auctioned Squad ({auctionPlayers.length}/10)
+            Auctioned Squad ({auctionPlayers.length})
           </h4>
 
           {auctionPlayers.length > 0 ? (

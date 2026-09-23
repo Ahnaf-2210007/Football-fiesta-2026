@@ -23,7 +23,6 @@ CREATE TABLE IF NOT EXISTS teams (
   logo_url TEXT,
   color TEXT NOT NULL,
   starting_purse INTEGER NOT NULL DEFAULT 1500 CHECK (starting_purse >= 0),
-  max_squad_size INTEGER NOT NULL DEFAULT 11 CHECK (max_squad_size > 0),
   icon_player_id TEXT,
   group_name TEXT CHECK (group_name IN ('A', 'B')),
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -32,8 +31,7 @@ CREATE TABLE IF NOT EXISTS teams (
 
 ALTER TABLE teams ADD COLUMN IF NOT EXISTS icon_player_id TEXT;
 ALTER TABLE teams ADD COLUMN IF NOT EXISTS group_name TEXT;
-ALTER TABLE teams ALTER COLUMN max_squad_size SET DEFAULT 11;
-UPDATE teams SET max_squad_size = 11 WHERE max_squad_size IN (9, 10);
+ALTER TABLE teams DROP COLUMN IF EXISTS max_squad_size;
 
 CREATE TABLE IF NOT EXISTS players (
   id TEXT PRIMARY KEY,
