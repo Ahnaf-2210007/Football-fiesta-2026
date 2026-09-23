@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Team, Player } from '../types';
 import { useApp } from '../context/AppContext';
 import { normalizeImageUrl, handleImageError } from '../utils/imageUtils';
-import { Shield, Users, Edit2, User, Crown, X } from 'lucide-react';
+import { Shield, Users, Edit2, User, Crown, X, Share2, Check } from 'lucide-react';
 
 interface TeamCardProps {
   team: Team;
@@ -20,6 +20,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const [editOwnerPhoto, setEditOwnerPhoto] = useState(team.ownerPhotoUrl || '');
   const [editLogo, setEditLogo] = useState(team.logoUrl || '');
   const [editColor, setEditColor] = useState(team.color);
+  const [shareState, setShareState] = useState<'idle' | 'shared' | 'copied'>('idle');
 
   const teamPlayers = players.filter(p => p.teamId === team.id);
   const displayName = team.name || `Team Slot ${team.id.replace('team-', '')}`;
@@ -43,8 +44,38 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
   const managerPhoto = normalizeImageUrl(team.ownerPhotoUrl);
   const logoUrl = normalizeImageUrl(team.logoUrl);
 
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}/teams#team-card-${encodeURIComponent(team.id)}`;
+    const shareData = {
+      title: `${displayName} Team Card`,
+      text: `${displayName} - ${teamPlayers.length} players`,
+      url: shareUrl
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareState('shared');
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareState('copied');
+      }
+      window.setTimeout(() => setShareState('idle'), 2200);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareState('copied');
+        window.setTimeout(() => setShareState('idle'), 2200);
+      } catch {
+        setShareState('idle');
+      }
+    }
+  };
+
   return (
     <div 
+      id={`team-card-${team.id}`}
       className="glass-panel rounded-3xl overflow-hidden transition-all duration-300 hover:border-primary-yellow/50 hover:shadow-2xl relative group flex flex-col lg:flex-row"
       style={{ borderTop: `4px solid ${team.color}` }}
     >
@@ -53,7 +84,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
         <div className="flex items-start justify-between gap-4">
           
           {/* Logo & Team Title */}
-          <div className="flex items-center gap-4">
+          <div className="flex min-w-0 items-center gap-4">
             <div 
               className="w-24 h-24 rounded-2xl overflow-hidden bg-charcoal border-2 flex items-center justify-center shrink-0 shadow-md"
               style={{ borderColor: team.color }}
@@ -70,10 +101,10 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
               )}
             </div>
 
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="font-bebas text-3xl tracking-wide text-white">{displayName}</h3>
-                <span className="text-xs font-bebas px-2 py-0.5 rounded bg-deep-blue text-light-cyan border border-light-cyan/30">
+            <div className="min-w-0">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <h3 className="min-w-0 break-words font-bebas text-3xl tracking-wide text-white">{displayName}</h3>
+                <span className="shrink-0 text-xs font-bebas px-2 py-0.5 rounded bg-deep-blue text-light-cyan border border-light-cyan/30">
                   {team.shortName}
                 </span>
               </div>
@@ -84,6 +115,16 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
               )}
             </div>
           </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={handleShare}
+              className="p-2 bg-charcoal/90 hover:bg-light-cyan hover:text-charcoal text-light-cyan rounded-xl border border-light-cyan/40 transition-colors shadow-md"
+              title="Share team card"
+              aria-label={`Share ${displayName} team card`}
+            >
+              {shareState === 'idle' ? <Share2 size={16} /> : <Check size={16} />}
+            </button>
 
           {isAdmin && editable && (
             <div className="flex items-center gap-2">
@@ -114,6 +155,7 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
             </button>
             </div>
           )}
+          </div>
         </div>
 
         {/* Manager Banner Showcase */}
@@ -130,9 +172,9 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
               <User size={22} className="text-gray-400" />
             )}
           </div>
-          <div>
+          <div className="min-w-0">
             <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider block">Team Manager</span>
-                <p className="text-sm font-bold text-white">{displayOwner}</p>
+            <p className="break-words text-sm font-bold text-white">{displayOwner}</p>
           </div>
         </div>
 
@@ -172,8 +214,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team, players, editable = fa
                   <User size={18} className="text-gray-400" />
                 )}
               </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-white leading-tight">{iconPlayer.name}</p>
+              <div className="min-w-0 flex-1">
+                <p className="break-words text-sm font-bold text-white leading-tight">{iconPlayer.name}</p>
                 <p className="text-[10px] text-gray-400">{iconPlayer.roll} • {iconPlayer.position}</p>
               </div>
             </div>
