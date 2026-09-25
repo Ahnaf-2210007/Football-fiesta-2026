@@ -109,6 +109,8 @@ export async function POST(request: Request) {
         ON CONFLICT (id) DO UPDATE SET name=$2, short_name=$3, logo_url=$4, color=$5,
           starting_purse=$6, owner_id=$7, icon_player_id=$8, updated_at=now()
         `, [t.id, t.name || 'Unnamed Team', t.shortName || t.id.toUpperCase(), t.logoUrl ?? null, t.color || '#00B3A4', t.startingPurse ?? 1500, ownerId, t.iconPlayerId ?? null]);
+      await query('UPDATE fixtures SET team1_name = $2, updated_at = now() WHERE team1_id = $1', [t.id, t.name || 'Unnamed Team']);
+      await query('UPDATE fixtures SET team2_name = $2, updated_at = now() WHERE team2_id = $1', [t.id, t.name || 'Unnamed Team']);
       return NextResponse.json({ ok: true });
     }
 

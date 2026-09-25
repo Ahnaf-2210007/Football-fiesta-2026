@@ -187,6 +187,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setTeams(prev => prev.map(t => t.id === updatedTeam.id ? updatedTeam : t));
     // Update player teamName references
     setPlayers(prev => prev.map(p => p.teamId === updatedTeam.id ? { ...p, teamName: updatedTeam.name } : p));
+    setFixtures(prev => prev.map(fixture => ({
+      ...fixture,
+      team1Name: fixture.team1Id === updatedTeam.id ? updatedTeam.name : fixture.team1Name,
+      team2Name: fixture.team2Id === updatedTeam.id ? updatedTeam.name : fixture.team2Name
+    })));
     persistMutation('updateTeam', { team: updatedTeam as unknown as Record<string, unknown> });
   };
 
