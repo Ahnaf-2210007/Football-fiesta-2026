@@ -54,7 +54,7 @@ export async function GET() {
         FROM fixtures ORDER BY match_no
       `),
       query(`
-        SELECT standings_overrides AS "standingsOverrides"
+        SELECT standings_overrides AS "standingsOverrides", custom_awards AS "customAwards"
         FROM tournament_state WHERE id = 'current'
       `)
     ]);
@@ -65,6 +65,7 @@ export async function GET() {
       rules: rulesResult.rows,
       fixtures: fixturesResult.rows,
       standingsOverrides: tournamentStateResult.rows[0]?.standingsOverrides || {},
+      customAwards: tournamentStateResult.rows[0]?.customAwards || {},
       source: 'database'
     });
   } catch (error) {
@@ -75,6 +76,7 @@ export async function GET() {
       rules: INITIAL_RULES,
       fixtures: [],
       standingsOverrides: {},
+      customAwards: {},
       source: 'database-unavailable'
     }, { status: 503 });
   }

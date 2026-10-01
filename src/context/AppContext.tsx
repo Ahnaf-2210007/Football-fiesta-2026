@@ -112,6 +112,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (databaseState.standingsOverrides && typeof databaseState.standingsOverrides === 'object') {
             setStandingsOverrides(databaseState.standingsOverrides);
           }
+          if (databaseState.customAwards && typeof databaseState.customAwards === 'object') {
+            setCustomAwards(databaseState.customAwards);
+          }
         }
       } catch (e) {
         console.error('Failed to load application state', e);
@@ -537,6 +540,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev,
       [awardId]: { ...(prev[awardId] || {}), ...awardData }
     }));
+    persistMutation('updateAward', { awardId, awardData });
   };
 
   const resetAllData = () => {

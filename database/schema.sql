@@ -102,8 +102,11 @@ ALTER TABLE fixtures ADD COLUMN IF NOT EXISTS scheduled_time TIME;
 CREATE TABLE IF NOT EXISTS tournament_state (
   id TEXT PRIMARY KEY,
   standings_overrides JSONB NOT NULL DEFAULT '{}'::jsonb,
+  custom_awards JSONB NOT NULL DEFAULT '{}'::jsonb,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE tournament_state ADD COLUMN IF NOT EXISTS custom_awards JSONB NOT NULL DEFAULT '{}'::jsonb;
 
 -- Lock the current tournament draw shown in the production tournament view.
 UPDATE teams SET group_name = 'A', updated_at = now()

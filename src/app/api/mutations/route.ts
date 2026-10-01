@@ -89,7 +89,7 @@ export async function POST(request: Request) {
 
     if (action === 'updatePlayer') {
       const p = payload.player;
-      await query('UPDATE players SET name=$2, roll=$3, series=$4, position=$5, is_icon=$6, status=$7, team_id=$8, sold_price=$9, image_url=$10, rating=$11, assists=$12, updated_at=now() WHERE id=$1', [p.id, p.name, p.roll, p.series, p.position, Boolean(p.isIcon), p.status, p.status === 'AVAILABLE' || p.status === 'UNSOLD' ? null : p.teamId ?? null, p.status === 'AVAILABLE' || p.status === 'UNSOLD' ? null : p.soldPrice ?? null, p.photoUrl ?? null, p.rating ?? null, p.assists ?? 0]);
+      await query('UPDATE players SET name=$2, roll=$3, series=$4, position=$5, is_icon=$6, status=$7, team_id=$8, sold_price=$9, image_url=$10, rating=$11, goals_scored=COALESCE($12, goals_scored), assists=COALESCE($13, assists), updated_at=now() WHERE id=$1', [p.id, p.name, p.roll, p.series, p.position, Boolean(p.isIcon), p.status, p.status === 'AVAILABLE' || p.status === 'UNSOLD' ? null : p.teamId ?? null, p.status === 'AVAILABLE' || p.status === 'UNSOLD' ? null : p.soldPrice ?? null, p.photoUrl ?? null, p.rating ?? null, p.goalsScored ?? null, p.assists ?? null]);
       return NextResponse.json({ ok: true });
     }
 
@@ -167,6 +167,15 @@ export async function POST(request: Request) {
         VALUES ('current', jsonb_build_object($1::text, $2::jsonb))
         ON CONFLICT (id) DO UPDATE SET standings_overrides = tournament_state.standings_overrides || jsonb_build_object($1::text, $2::jsonb), updated_at = now()
       `, [payload.teamId, JSON.stringify({ ...(payload.overrideData || {}), manualOverride: true })]);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (action === 'updateAward') {
+      await query(`
+        INSERT INTO tournament_state (id, custom_awards)
+        VALUES ('current', jsonb_build_object($1::text, $2::jsonb))
+        ON CONFLICT (id) DO UPDATE SET custom_awards = tournament_state.custom_awards || jsonb_build_object($1::text, $2::jsonb), updated_at = now()
+      `, [payload.awardId, JSON.stringify(payload.awardData || {})]);
       return NextResponse.json({ ok: true });
     }
 
