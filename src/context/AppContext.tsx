@@ -471,6 +471,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return {
           ...f,
           team1Score,
+          team2Score,
+          team1Pens,
+          team2Pens,
+          isCompleted
+        };
+      }
+      return f;
+    }));
     if (fixture) {
       setStandingsOverrides(prev => {
         const next = { ...prev };
@@ -480,14 +488,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       persistMutation('updateFixtureScore', { fixture: { ...fixture, team1Score, team2Score, team1Pens, team2Pens } as unknown as Record<string, unknown> });
     }
-          team2Pens,
-          isCompleted
-        };
-      }
-      return f;
-    }));
-    const fixture = fixtures.find(item => item.id === fixtureId);
-    if (fixture) persistMutation('updateFixtureScore', { fixture: { ...fixture, team1Score, team2Score, team1Pens, team2Pens } as unknown as Record<string, unknown> });
   };
 
   const updateFixtureSchedule = (fixtureId: string, scheduledDate?: string, scheduledTime?: string) => {
