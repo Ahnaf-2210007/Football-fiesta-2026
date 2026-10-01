@@ -45,11 +45,14 @@ CREATE TABLE IF NOT EXISTS players (
   team_id TEXT REFERENCES teams(id) ON DELETE SET NULL,
   goals_scored INTEGER NOT NULL DEFAULT 0 CHECK (goals_scored >= 0),
   assists INTEGER NOT NULL DEFAULT 0 CHECK (assists >= 0),
+  rating INTEGER,
   image_url TEXT,
   drive_file_id TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+ALTER TABLE players ADD COLUMN IF NOT EXISTS rating INTEGER;
 
 ALTER TABLE teams DROP CONSTRAINT IF EXISTS teams_icon_player_id_fkey;
 ALTER TABLE teams ADD CONSTRAINT teams_icon_player_id_fkey
