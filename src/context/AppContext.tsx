@@ -461,14 +461,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Group Draw & Fixtures Generator
   const updateFixtureScore = (fixtureId: string, team1Score?: number, team2Score?: number, team1Pens?: number, team2Pens?: number) => {
+    const fixture = fixtures.find(item => item.id === fixtureId);
     setFixtures(prev => prev.map(f => {
       if (f.id === fixtureId) {
         const isCompleted = team1Score !== undefined && team2Score !== undefined && team1Score !== null && team2Score !== null;
         return {
           ...f,
           team1Score,
-          team2Score,
-          team1Pens,
+    if (fixture) {
+      setStandingsOverrides(prev => {
+        const next = { ...prev };
+        delete next[fixture.team1Id];
+        delete next[fixture.team2Id];
+        return next;
+      });
+      persistMutation('updateFixtureScore', { fixture: { ...fixture, team1Score, team2Score, team1Pens, team2Pens } as unknown as Record<string, unknown> });
+    }
           team2Pens,
           isCompleted
         };

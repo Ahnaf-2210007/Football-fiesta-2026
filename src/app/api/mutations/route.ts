@@ -124,6 +124,11 @@ export async function POST(request: Request) {
     if (action === 'updateFixtureScore') {
       const f = payload.fixture;
       await query('UPDATE fixtures SET team1_score=$2, team2_score=$3, team1_pens=$4, team2_pens=$5, is_completed=$6, updated_at=now() WHERE id=$1', [f.id, f.team1Score ?? null, f.team2Score ?? null, f.team1Pens ?? null, f.team2Pens ?? null, f.team1Score !== undefined && f.team2Score !== undefined]);
+      await query(`
+        UPDATE tournament_state
+        SET standings_overrides = standings_overrides - $1 - $2, updated_at = now()
+        WHERE id = 'current'
+      `, [f.team1Id, f.team2Id]);
       return NextResponse.json({ ok: true });
     }
 
