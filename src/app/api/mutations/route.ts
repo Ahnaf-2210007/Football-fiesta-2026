@@ -132,6 +132,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true });
     }
 
+    if (action === 'updateFixtureParticipants') {
+      await query(`
+        UPDATE fixtures
+        SET team1_id = $2, team1_name = $3, team2_id = $4, team2_name = $5,
+            team1_score = NULL, team2_score = NULL, team1_pens = NULL, team2_pens = NULL,
+            is_completed = false, updated_at = now()
+        WHERE id = $1
+      `, [payload.fixtureId, payload.team1Id, payload.team1Name, payload.team2Id, payload.team2Name]);
+      return NextResponse.json({ ok: true });
+    }
+
     if (action === 'updateFixtureSchedule') {
       const fixture = payload.fixture;
       await query('UPDATE fixtures SET scheduled_date=$2, scheduled_time=$3, updated_at=now() WHERE id=$1', [fixture.id, fixture.scheduledDate || null, fixture.scheduledTime || null]);

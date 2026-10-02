@@ -52,6 +52,7 @@ interface AppContextType {
 
   // Tournament actions
   updateFixtureScore: (fixtureId: string, team1Score?: number, team2Score?: number, team1Pens?: number, team2Pens?: number) => void;
+  updateFixtureParticipants: (fixtureId: string, team1Id: string, team1Name: string, team2Id: string, team2Name: string) => void;
   updateFixtureSchedule: (fixtureId: string, scheduledDate?: string, scheduledTime?: string) => void;
   updateStandingOverride: (teamId: string, overrideData: Partial<GroupStanding>) => void;
   resetStandingOverrides: () => void;
@@ -490,6 +491,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const updateFixtureParticipants = (fixtureId: string, team1Id: string, team1Name: string, team2Id: string, team2Name: string) => {
+    setFixtures(prev => prev.map(fixture => fixture.id === fixtureId
+      ? {
+          ...fixture,
+          team1Id,
+          team1Name,
+          team2Id,
+          team2Name,
+          team1Score: undefined,
+          team2Score: undefined,
+          team1Pens: undefined,
+          team2Pens: undefined,
+          isCompleted: false
+        }
+      : fixture));
+    persistMutation('updateFixtureParticipants', { fixtureId, team1Id, team1Name, team2Id, team2Name });
+  };
+
   const updateFixtureSchedule = (fixtureId: string, scheduledDate?: string, scheduledTime?: string) => {
     setFixtures(prev => prev.map(fixture => fixture.id === fixtureId
       ? { ...fixture, scheduledDate: scheduledDate || undefined, scheduledTime: scheduledTime || undefined }
@@ -584,6 +603,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         bulkImportPlayers,
         incrementPlayerGoals,
         updateFixtureScore,
+        updateFixtureParticipants,
         updateFixtureSchedule,
         updateStandingOverride,
         resetStandingOverrides,

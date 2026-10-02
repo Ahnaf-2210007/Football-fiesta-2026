@@ -127,8 +127,8 @@ VALUES
   ('f-4', 4, 'B', 'team-1790069104216', 'Pressure... What Pressure FC', 'team-1790069011168', 'HATTIMATIM TIM - তারা মাঠে পাড়ে ডিম', 'Group B - Match 1'),
   ('f-5', 5, 'B', 'team-1790069011168', 'HATTIMATIM TIM - তারা মাঠে পাড়ে ডিম', 'team-1790069203133', 'মুরগির খামার ছেড়ে Mourinho Speaking', 'Group B - Match 2'),
   ('f-6', 6, 'B', 'team-1790069203133', 'মুরগির খামার ছেড়ে Mourinho Speaking', 'team-1790069104216', 'Pressure... What Pressure FC', 'Group B - Match 3'),
-  ('f-sf1', 7, 'SEMIFINAL', 'team-1790068546862', 'Ball Busters', 'team-1790069104216', 'Pressure... What Pressure FC', 'Semifinal 1'),
-  ('f-sf2', 8, 'SEMIFINAL', 'team-1790069011168', 'HATTIMATIM TIM - তারা মাঠে পাড়ে ডিম', 'team-1790068651996', 'Imperial FC', 'Semifinal 2'),
+  ('f-sf1', 7, 'SEMIFINAL', 'tbd-group-a-winner', 'Group A Winner', 'tbd-group-b-runner-up', 'Group B Runner-up', 'Semifinal 1'),
+  ('f-sf2', 8, 'SEMIFINAL', 'tbd-group-b-winner', 'Group B Winner', 'tbd-group-a-runner-up', 'Group A Runner-up', 'Semifinal 2'),
   ('f-final', 9, 'FINAL', 'tbd-sf1', 'Winner SF1', 'tbd-sf2', 'Winner SF2', 'Grand Final')
 ON CONFLICT (id) DO UPDATE SET
   match_no = EXCLUDED.match_no,

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { GroupStanding, MatchFixture } from '@/types';
 import { 
@@ -102,6 +102,7 @@ export default function TournamentPage() {
     teams, 
     fixtures, 
     updateFixtureScore,
+    updateFixtureParticipants,
     updateFixtureSchedule,
     standingsOverrides, 
     updateStandingOverride, 
@@ -201,6 +202,49 @@ export default function TournamentPage() {
   const sf1Fixture = fixtures.find(f => f.id === 'f-sf1');
   const sf2Fixture = fixtures.find(f => f.id === 'f-sf2');
   const finalFixture = fixtures.find(f => f.id === 'f-final');
+
+  const getFixtureWinner = (fixture?: MatchFixture) => {
+    if (!fixture?.isCompleted || fixture.team1Score === undefined || fixture.team2Score === undefined) return undefined;
+    if (fixture.team1Score > fixture.team2Score) return { id: fixture.team1Id, name: fixture.team1Name };
+    if (fixture.team2Score > fixture.team1Score) return { id: fixture.team2Id, name: fixture.team2Name };
+    if (fixture.team1Pens === undefined || fixture.team2Pens === undefined) return undefined;
+    if (fixture.team1Pens > fixture.team2Pens) return { id: fixture.team1Id, name: fixture.team1Name };
+    if (fixture.team2Pens > fixture.team1Pens) return { id: fixture.team2Id, name: fixture.team2Name };
+    return undefined;
+  };
+
+  const expectedSf1 = {
+    team1Id: winnerA?.teamId || 'tbd-group-a-winner',
+    team1Name: winnerA?.teamName || 'Group A Winner',
+    team2Id: runnerUpB?.teamId || 'tbd-group-b-runner-up',
+    team2Name: runnerUpB?.teamName || 'Group B Runner-up'
+  };
+  const expectedSf2 = {
+    team1Id: winnerB?.teamId || 'tbd-group-b-winner',
+    team1Name: winnerB?.teamName || 'Group B Winner',
+    team2Id: runnerUpA?.teamId || 'tbd-group-a-runner-up',
+    team2Name: runnerUpA?.teamName || 'Group A Runner-up'
+  };
+  const sf1Winner = getFixtureWinner(sf1Fixture);
+  const sf2Winner = getFixtureWinner(sf2Fixture);
+  const expectedFinal = {
+    team1Id: sf1Winner?.id || 'tbd-sf1',
+    team1Name: sf1Winner?.name || 'Winner Semifinal 1',
+    team2Id: sf2Winner?.id || 'tbd-sf2',
+    team2Name: sf2Winner?.name || 'Winner Semifinal 2'
+  };
+
+  useEffect(() => {
+    if (sf1Fixture && (sf1Fixture.team1Id !== expectedSf1.team1Id || sf1Fixture.team1Name !== expectedSf1.team1Name || sf1Fixture.team2Id !== expectedSf1.team2Id || sf1Fixture.team2Name !== expectedSf1.team2Name)) {
+      updateFixtureParticipants('f-sf1', expectedSf1.team1Id, expectedSf1.team1Name, expectedSf1.team2Id, expectedSf1.team2Name);
+    }
+    if (sf2Fixture && (sf2Fixture.team1Id !== expectedSf2.team1Id || sf2Fixture.team1Name !== expectedSf2.team1Name || sf2Fixture.team2Id !== expectedSf2.team2Id || sf2Fixture.team2Name !== expectedSf2.team2Name)) {
+      updateFixtureParticipants('f-sf2', expectedSf2.team1Id, expectedSf2.team1Name, expectedSf2.team2Id, expectedSf2.team2Name);
+    }
+    if (finalFixture && (finalFixture.team1Id !== expectedFinal.team1Id || finalFixture.team1Name !== expectedFinal.team1Name || finalFixture.team2Id !== expectedFinal.team2Id || finalFixture.team2Name !== expectedFinal.team2Name)) {
+      updateFixtureParticipants('f-final', expectedFinal.team1Id, expectedFinal.team1Name, expectedFinal.team2Id, expectedFinal.team2Name);
+    }
+  }, [sf1Fixture, sf2Fixture, finalFixture, expectedSf1.team1Id, expectedSf1.team1Name, expectedSf1.team2Id, expectedSf1.team2Name, expectedSf2.team1Id, expectedSf2.team1Name, expectedSf2.team2Id, expectedSf2.team2Name, expectedFinal.team1Id, expectedFinal.team1Name, expectedFinal.team2Id, expectedFinal.team2Name]);
 
   return (
     <div className="visual-rally rally-tournament max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
@@ -479,9 +523,9 @@ export default function TournamentPage() {
                 <div>
                   <h4 className="font-bebas text-2xl text-vibrant-orange">SEMIFINAL 1</h4>
                   <div className="text-sm space-y-2 mt-2">
-                    <p className="text-white font-semibold">Group A Winner</p>
+                    <p className="text-white font-semibold">{expectedSf1.team1Name}</p>
                     <p className="text-xs text-gray-400">vs</p>
-                    <p className="text-white font-semibold">Group B Runner-up</p>
+                    <p className="text-white font-semibold">{expectedSf1.team2Name}</p>
                   </div>
                 </div>
 
@@ -507,12 +551,31 @@ export default function TournamentPage() {
                       onChange={(e) => updateFixtureScore('f-sf1', sf1Fixture?.team1Score, Number(e.target.value))}
                       className="w-12 h-10 bg-deep-blue border border-gray-600 rounded text-center text-white font-bebas text-2xl focus:border-primary-yellow focus:outline-none"
                     />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="P1"
+                      value={sf1Fixture?.team1Pens ?? ''}
+                      onChange={(e) => updateFixtureScore('f-sf1', sf1Fixture?.team1Score, sf1Fixture?.team2Score, Number(e.target.value), sf1Fixture?.team2Pens)}
+                      className="w-12 h-10 bg-deep-blue border border-vibrant-orange rounded text-center text-white text-xs focus:border-primary-yellow focus:outline-none"
+                      title="Semifinal 1 penalties for team 1"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="P2"
+                      value={sf1Fixture?.team2Pens ?? ''}
+                      onChange={(e) => updateFixtureScore('f-sf1', sf1Fixture?.team1Score, sf1Fixture?.team2Score, sf1Fixture?.team1Pens, Number(e.target.value))}
+                      className="w-12 h-10 bg-deep-blue border border-vibrant-orange rounded text-center text-white text-xs focus:border-primary-yellow focus:outline-none"
+                      title="Semifinal 1 penalties for team 2"
+                    />
                   </div>
                 ) : (
                   <div className="text-center bg-charcoal/60 p-2.5 rounded-xl border border-gray-800 mt-4">
                     {sf1Fixture?.isCompleted ? (
                       <p className="font-bebas text-3xl text-primary-yellow">
-                        {sf1Fixture.team1Score} - {sf1Fixture.team2Score}
+                          {sf1Fixture.team1Score} - {sf1Fixture.team2Score}
+                          {(sf1Fixture.team1Pens !== undefined || sf1Fixture.team2Pens !== undefined) && ` (${sf1Fixture.team1Pens ?? 0} - ${sf1Fixture.team2Pens ?? 0} pens)`}
                       </p>
                     ) : (
                       <span className="text-xs text-gray-500 italic">Match Scheduled</span>
@@ -526,9 +589,9 @@ export default function TournamentPage() {
                 <div>
                   <h4 className="font-bebas text-2xl text-vibrant-orange">SEMIFINAL 2</h4>
                   <div className="text-sm space-y-2 mt-2">
-                    <p className="text-white font-semibold">Group B Winner</p>
+                    <p className="text-white font-semibold">{expectedSf2.team1Name}</p>
                     <p className="text-xs text-gray-400">vs</p>
-                    <p className="text-white font-semibold">Group A Runner-up</p>
+                    <p className="text-white font-semibold">{expectedSf2.team2Name}</p>
                   </div>
                 </div>
 
@@ -554,12 +617,31 @@ export default function TournamentPage() {
                       onChange={(e) => updateFixtureScore('f-sf2', sf2Fixture?.team1Score, Number(e.target.value))}
                       className="w-12 h-10 bg-deep-blue border border-gray-600 rounded text-center text-white font-bebas text-2xl focus:border-primary-yellow focus:outline-none"
                     />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="P1"
+                      value={sf2Fixture?.team1Pens ?? ''}
+                      onChange={(e) => updateFixtureScore('f-sf2', sf2Fixture?.team1Score, sf2Fixture?.team2Score, Number(e.target.value), sf2Fixture?.team2Pens)}
+                      className="w-12 h-10 bg-deep-blue border border-vibrant-orange rounded text-center text-white text-xs focus:border-primary-yellow focus:outline-none"
+                      title="Semifinal 2 penalties for team 1"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="P2"
+                      value={sf2Fixture?.team2Pens ?? ''}
+                      onChange={(e) => updateFixtureScore('f-sf2', sf2Fixture?.team1Score, sf2Fixture?.team2Score, sf2Fixture?.team1Pens, Number(e.target.value))}
+                      className="w-12 h-10 bg-deep-blue border border-vibrant-orange rounded text-center text-white text-xs focus:border-primary-yellow focus:outline-none"
+                      title="Semifinal 2 penalties for team 2"
+                    />
                   </div>
                 ) : (
                   <div className="text-center bg-charcoal/60 p-2.5 rounded-xl border border-gray-800 mt-4">
                     {sf2Fixture?.isCompleted ? (
                       <p className="font-bebas text-3xl text-primary-yellow">
-                        {sf2Fixture.team1Score} - {sf2Fixture.team2Score}
+                          {sf2Fixture.team1Score} - {sf2Fixture.team2Score}
+                          {(sf2Fixture.team1Pens !== undefined || sf2Fixture.team2Pens !== undefined) && ` (${sf2Fixture.team1Pens ?? 0} - ${sf2Fixture.team2Pens ?? 0} pens)`}
                       </p>
                     ) : (
                       <span className="text-xs text-gray-500 italic">Match Scheduled</span>
@@ -575,9 +657,9 @@ export default function TournamentPage() {
                     <Trophy size={20} /> FINAL
                   </h4>
                   <div className="text-sm space-y-2 mt-2">
-                    <p className="text-white font-bold">Winner Semifinal 1</p>
+                    <p className="text-white font-bold">{expectedFinal.team1Name}</p>
                     <p className="text-xs text-primary-yellow font-bebas text-lg">VS</p>
-                    <p className="text-white font-bold">Winner Semifinal 2</p>
+                    <p className="text-white font-bold">{expectedFinal.team2Name}</p>
                   </div>
                 </div>
 
@@ -603,12 +685,31 @@ export default function TournamentPage() {
                       onChange={(e) => updateFixtureScore('f-final', finalFixture?.team1Score, Number(e.target.value))}
                       className="w-12 h-10 bg-deep-blue border border-gray-600 rounded text-center text-white font-bebas text-2xl focus:border-primary-yellow focus:outline-none"
                     />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="P1"
+                      value={finalFixture?.team1Pens ?? ''}
+                      onChange={(e) => updateFixtureScore('f-final', finalFixture?.team1Score, finalFixture?.team2Score, Number(e.target.value), finalFixture?.team2Pens)}
+                      className="w-12 h-10 bg-deep-blue border border-primary-yellow rounded text-center text-white text-xs focus:border-primary-yellow focus:outline-none"
+                      title="Final penalties for team 1"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="P2"
+                      value={finalFixture?.team2Pens ?? ''}
+                      onChange={(e) => updateFixtureScore('f-final', finalFixture?.team1Score, finalFixture?.team2Score, finalFixture?.team1Pens, Number(e.target.value))}
+                      className="w-12 h-10 bg-deep-blue border border-primary-yellow rounded text-center text-white text-xs focus:border-primary-yellow focus:outline-none"
+                      title="Final penalties for team 2"
+                    />
                   </div>
                 ) : (
                   <div className="text-center bg-charcoal/60 p-2.5 rounded-xl border border-gray-800 mt-4">
                     {finalFixture?.isCompleted ? (
                       <p className="font-bebas text-3xl text-primary-yellow">
-                        {finalFixture.team1Score} - {finalFixture.team2Score}
+                          {finalFixture.team1Score} - {finalFixture.team2Score}
+                          {(finalFixture.team1Pens !== undefined || finalFixture.team2Pens !== undefined) && ` (${finalFixture.team1Pens ?? 0} - ${finalFixture.team2Pens ?? 0} pens)`}
                       </p>
                     ) : (
                       <span className="text-xs text-gray-500 italic">Match Scheduled</span>
